@@ -1,0 +1,10 @@
+[Unit]
+Description = Pedal-Pi effects
+
+[Service]
+ExecStart=/usr/local/bin/pedal-pi-effects
+Restart=always
+Type=simple
+
+[Install]
+WantedBy=multi-user.target

@@ -1,8 +1,9 @@
+#include <chrono>
 #include <iostream>
-
-using std::cout;
-using std::endl;
+#include <thread>
 
 int main() {
-  cout << "Hello, world." << endl;
+  while (true) {
+    std::this_thread::sleep_for(std::chrono::seconds(5));
+  }
 }
