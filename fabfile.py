@@ -30,11 +30,13 @@ def install_cmake(c):
 
 
 @task
-def install_pedal_pi_effects(c):
+def install(c, clean_build=False):
     local_dir_path = os.path.dirname(__file__)
     dir_name = 'pedal-pi-effects'
 
-    c.run(f'rm -rf {dir_name}')
+    if clean_build:
+        c.run(f'rm -rf {dir_name}')
+
     rsync(c, f'{local_dir_path}/', f'{dir_name}/',
         exclude=['.git'], rsync_opts='-C --filter=":- .gitignore"')
     with c.cd(dir_name):
