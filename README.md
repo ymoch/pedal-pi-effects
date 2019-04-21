@@ -12,4 +12,5 @@ pip install "patchwork>=1.0,<2"
 pip install cryptography==2.4.2  # To reduce warnings.
 
 fab2 -H user@host provision
+fab2 -H user@host deploy
 ```
