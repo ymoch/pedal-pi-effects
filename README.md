@@ -9,4 +9,6 @@ Using [Python venv](https://docs.python.org/3/library/venv.html) is strongly rec
 ```sh
 pip install "fabric2>=2.4,<3"
 pip install cryptography==2.4.2  # To reduce warnings.
+
+fab2 -H user@host provision
 ```
