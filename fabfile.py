@@ -22,5 +22,10 @@ def install_bcm2835(c):
 
 
 @task
+def install_cmake(c):
+    c.sudo('apt-get install -y cmake')
+
+
+@task
 def provision(c):
     install_bcm2835(c)
