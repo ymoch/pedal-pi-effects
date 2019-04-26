@@ -6,6 +6,8 @@ add_executable(
   src/ymoch/pedalpieffects/main.cc
 )
 
+target_link_libraries(pedal-pi-effects bcm2835)
+
 install(
   TARGETS pedal-pi-effects
   DESTINATION bin
