@@ -8,13 +8,27 @@ using std::cerr;
 using std::endl;
 
 namespace {
+
+template <uint32_t base, uint32_t exponent>
+struct Power {
+  constexpr static uint32_t value = base * Power<base, exponent - 1>::value;
+};
+template <uint32_t base>
+struct Power<base, 0> {
+  constexpr static uint32_t value = 1;
+};
+
+constexpr uint32_t kHostClockFrequencyHz = 19200000;
+
 constexpr uint8_t kPwmChannel0 = 0;
 constexpr uint8_t kPwmChannel1 = 1;
+constexpr uint32_t kNumBit = 6;
+constexpr uint32_t kPwmClockDivider = BCM2835_PWM_CLOCK_DIVIDER_2;
 constexpr bool kPwmMarkSpaceEnabled = true;
 constexpr bool kPwmChannelEnabled = true;
-
-// Max clk frequency (19.2MHz/2 = 9.6MHz)
-constexpr uint32_t kPwmClockDivider = BCM2835_PWM_CLOCK_DIVIDER_2;
+constexpr uint32_t kPwmRange = Power<2, kNumBit>::value;
+constexpr uint32_t kPwmClockFrequencyHz =
+    kHostClockFrequencyHz / kPwmClockDivider / kPwmRange;
 
 constexpr uint8_t kPinPush1 = RPI_GPIO_P1_08;
 constexpr uint8_t kPinPush2 = RPI_V2_GPIO_P1_38;
@@ -44,15 +58,17 @@ int main(int argc, char **argv) {
   bcm2835_pwm_set_mode(kPwmChannel1, kPwmMarkSpaceEnabled, kPwmChannelEnabled);
 
   // 64 is max range (6bits): 9.6MHz/64=150KHz switching PWM freq.
-  bcm2835_pwm_set_range(kPwmChannel0, 64);
-  bcm2835_pwm_set_range(kPwmChannel1, 64);
+  bcm2835_pwm_set_range(kPwmChannel0, kPwmRange);
+  bcm2835_pwm_set_range(kPwmChannel1, kPwmRange);
 
   // define SPI bus configuration
-  bcm2835_spi_setBitOrder(BCM2835_SPI_BIT_ORDER_MSBFIRST); // default
-  bcm2835_spi_setDataMode(BCM2835_SPI_MODE0); // default
-  bcm2835_spi_setClockDivider(BCM2835_SPI_CLOCK_DIVIDER_64); // 4MHz clock
-  bcm2835_spi_chipSelect(BCM2835_SPI_CS0); // default
-  bcm2835_spi_setChipSelectPolarity(BCM2835_SPI_CS0, LOW); // default
+  bcm2835_spi_setBitOrder(BCM2835_SPI_BIT_ORDER_MSBFIRST);    // default
+  bcm2835_spi_setDataMode(BCM2835_SPI_MODE0);                 // default
+  bcm2835_spi_setClockDivider(BCM2835_SPI_CLOCK_DIVIDER_64);  // 4MHz clock
+  bcm2835_spi_chipSelect(BCM2835_SPI_CS0);                    // default
+  bcm2835_spi_setChipSelectPolarity(BCM2835_SPI_CS0, LOW);    // default
+
+  cout << "PWM Clock Frequency (Hz): " << kPwmClockFrequencyHz << endl;
 
   char mosi[10] = {0x01, 0x00, 0x00};  // 12 bit ADC read 0x08 ch0, - 0c for ch1
   char miso[10] = {0};
@@ -72,14 +88,14 @@ int main(int argc, char **argv) {
 
   // Main Loop
   double amplification = 1.0;
-  double amplification_delta = 1.2;
   for (uint32_t read_timer = 0;; ++read_timer) {
     // read 12 bits ADC
     bcm2835_spi_transfernb(mosi, miso, 3);
     uint32_t input_signal = miso[2] + ((miso[1] & 0x0F) << 8);
 
     // Read the controls every 50000 times (0.25s) to save resources.
-    if (read_timer % 50000 == 0) {
+    constexpr uint32_t kControlCheckInterval = kPwmClockFrequencyHz * 0.25;
+    if (read_timer >= kControlCheckInterval) {
       read_timer = 0;
       uint8_t push_1 = bcm2835_gpio_lev(kPinPush1);
       uint8_t push_2 = bcm2835_gpio_lev(kPinPush2);
@@ -89,14 +105,15 @@ int main(int argc, char **argv) {
       // light the effect when foot switch 1 is activated.
       bcm2835_gpio_write(kPinLed1, !foot_switch_1);
 
+      constexpr double kAmplificationDelta = 1.2;
       if (!push_1) {
         bcm2835_delay(100);  // 100ms delay for buttons debouncing.
-        amplification /= amplification_delta;
+        amplification /= kAmplificationDelta;
         cout << "Amplification: " << amplification << endl;
       }
       if (!push_2) {
         bcm2835_delay(100);  // 100ms delay for buttons debouncing.
-        amplification *= amplification_delta;
+        amplification *= kAmplificationDelta;
         cout << "Amplification: " << amplification << endl;
       }
     }
