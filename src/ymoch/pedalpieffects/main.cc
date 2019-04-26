@@ -83,7 +83,7 @@ int main(int argc, char **argv) {
       read_timer = 0;
       uint8_t push_1 = bcm2835_gpio_lev(kPinPush1);
       uint8_t push_2 = bcm2835_gpio_lev(kPinPush2);
-      uint8_t toggle_switch_1 = bcm2835_gpio_lev(kPinToggleSwitch1);
+      // uint8_t toggle_switch_1 = bcm2835_gpio_lev(kPinToggleSwitch1);
       uint8_t foot_switch_1 = bcm2835_gpio_lev(kPinFootSwitch1);
 
       // light the effect when foot switch 1 is activated.
