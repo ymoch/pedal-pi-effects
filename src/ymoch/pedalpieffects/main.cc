@@ -115,7 +115,7 @@ int main(int argc, char** argv) {
       uint8_t push_2 = bcm2835_gpio_lev(kPinPush2);
       if (!push_2) {
         bcm2835_delay(100);  // 100ms delay for buttons debouncing.
-        gain.factor(gain.factor() / kGainFactorDelta);
+        gain.factor(gain.factor() * kGainFactorDelta);
         cout << "Gain: " << gain.factor() << endl;
       }
 
