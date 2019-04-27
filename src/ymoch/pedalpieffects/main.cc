@@ -87,6 +87,9 @@ int main(int argc, char** argv) {
   // Main Loop
   const Normalizer<uint32_t> normalizer(0, Power<2, 12>::value - 1);
   Amplifier gain(1.5);
+  const Amplifier dump_volume(0.8);
+  const Amplifier master_volume(1.0 / 1.5);
+
   bool boosted = false;
   for (uint32_t read_timer = 0;; ++read_timer) {
     // read 12 bits ADC
@@ -120,19 +123,22 @@ int main(int argc, char** argv) {
       bcm2835_gpio_write(kPinLed1, !foot_switch_1);
     }
 
-    Signal normalized_signal = normalizer.Normalize(input_signal);
+    Signal signal = normalizer.Normalize(input_signal);
+    signal = gain(signal);
 
-    // Soft clipping.
-    Signal amplified_signal = std::tanh(gain(normalized_signal)) / 1.5;
-    if (amplified_signal < 0) {
-      amplified_signal *= 0.8;
+    // Tube clipping.
+    signal = std::tanh(signal);
+    if (signal < 0) {
+      signal *= 0.8;
     }
+
     if (!boosted) {
-      amplified_signal *= 0.7;
+      signal = dump_volume(signal);
     }
+    signal = master_volume(signal);
 
     // generate output PWM signal 6 bits
-    uint32_t output_signal = normalizer.Unnormalize(amplified_signal);
+    uint32_t output_signal = normalizer.Unnormalize(signal);
     bcm2835_pwm_set_data(1, output_signal & 0x3F);
     bcm2835_pwm_set_data(0, output_signal >> 6);
   }
