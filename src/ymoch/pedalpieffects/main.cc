@@ -5,9 +5,10 @@
 
 #include <bcm2835.h>
 
-#include "dsp/type.h"
-#include "dsp/normalization.h"
 #include "dsp/effect/amplification.h"
+#include "dsp/effect/tube-clipping.h"
+#include "dsp/normalization.h"
+#include "dsp/type.h"
 #include "math/constexpr-math.h"
 
 using std::cout;
@@ -16,6 +17,7 @@ using std::endl;
 using ymoch::pedalpieffects::dsp::type::Signal;
 using ymoch::pedalpieffects::dsp::normalization::Normalizer;
 using ymoch::pedalpieffects::dsp::effect::amplification::Amplifier;
+using ymoch::pedalpieffects::dsp::effect::tube_clipping::TubeClipper;
 using ymoch::pedalpieffects::math::constexpr_math::Power;
 
 namespace {
@@ -87,6 +89,7 @@ int main(int argc, char** argv) {
   // Main Loop
   const Normalizer<uint32_t> normalizer(0, Power<2, 12>::value - 1);
   Amplifier gain(1.5);
+  const TubeClipper tube_clip;
   const Amplifier dump_volume(0.8);
   const Amplifier master_volume(1.0 / 1.5);
 
@@ -125,13 +128,7 @@ int main(int argc, char** argv) {
 
     Signal signal = normalizer.Normalize(input_signal);
     signal = gain(signal);
-
-    // Tube clipping.
-    signal = std::tanh(signal);
-    if (signal < 0) {
-      signal *= 0.8;
-    }
-
+    signal = tube_clip(signal);
     if (!boosted) {
       signal = dump_volume(signal);
     }
