@@ -11,8 +11,3 @@ add_test(
   COMMAND ./pedal-pi-effects-test
   WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin
 )
-
-install(
-  TARGETS pedal-pi-effects
-  DESTINATION bin
-)

@@ -2,9 +2,7 @@ cmake_minimum_required(VERSION 3.7)
 
 add_definitions(-std=c++17 -Wall)
 
-include_directories(
-  .
-)
+include_directories(.)
 
 add_executable(
   pedal-pi-effects
@@ -12,3 +10,5 @@ add_executable(
 )
 
 target_link_libraries(pedal-pi-effects bcm2835)
+
+install(TARGETS pedal-pi-effects DESTINATION bin)

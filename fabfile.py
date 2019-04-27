@@ -30,9 +30,9 @@ def install_bcm2835(c):
 
 
 @task
-def install_google_test(c):
+def install_googletest(c):
     url = 'https://codeload.github.com/google/googletest/tar.gz/release-1.8.1'
-    dir_name = 'google-test-relase-1.8.1'
+    dir_name = 'googletest-release-1.8.1'
 
     c.run(f'rm -rf {dir_name}')
     c.run(f'curl -s "{url}" | tar zxf -')
@@ -102,4 +102,4 @@ def deploy(c, clean_build=False):
 def provision(c):
     install_cmake(c)
     install_bcm2835(c)
-    install_cmake(c)
+    install_googletest(c)

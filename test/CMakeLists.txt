@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.7)
 
 add_definitions(-std=c++17 -Wall)
+find_package(Threads REQUIRED)
 
 include_directories(
   ../src
@@ -20,4 +21,5 @@ target_link_libraries(
   gmock_main
   gmock
   gtest
+  Threads::Threads
 )
