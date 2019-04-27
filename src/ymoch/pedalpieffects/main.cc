@@ -6,39 +6,15 @@
 #include <bcm2835.h>
 
 #include "math/constexpr-math.h"
+#include "math/signal.h"
 
 using std::cout;
 using std::cerr;
 using std::endl;
 using ymoch::pedalpieffects::math::constexpr_math::Power;
+using ymoch::pedalpieffects::math::signal::Normalizer;
 
 namespace {
-
-template <typename T>
-class SignalNormalizer {
- public:
-  SignalNormalizer(const T& lower_limit, const T& upper_limit)
-      : lower_limit_(lower_limit),
-        upper_limit_(upper_limit),
-        width_(upper_limit_ - lower_limit_ + 1),
-        offset_(width_ / 2.0 + lower_limit) {}
-
-  double Normalize(const T& signal) const {
-    return (static_cast<double>(signal) - offset_) / width_;
-  }
-
-  double Unnormalize(double signal) const {
-    const auto unnormalized = signal * width_ + offset_;
-    return std::max(std::min(static_cast<T>(unnormalized), upper_limit_),
-                    lower_limit_);
-  }
-
- private:
-  T lower_limit_;
-  T upper_limit_;
-  double width_;
-  double offset_;
-};
 
 constexpr uint8_t kPwmChannel0 = 0;
 constexpr uint8_t kPwmChannel1 = 1;
@@ -105,7 +81,7 @@ int main(int argc, char** argv) {
   bcm2835_gpio_set_pud(kPinFootSwitch1, BCM2835_GPIO_PUD_UP);
 
   // Main Loop
-  const SignalNormalizer<uint32_t> normalizer(0, Power<2, 12>::value - 1);
+  const Normalizer<uint32_t> normalizer(0, Power<2, 12>::value - 1);
   double amplification = 1.5;
   bool boosted = false;
   for (uint32_t read_timer = 0;; ++read_timer) {

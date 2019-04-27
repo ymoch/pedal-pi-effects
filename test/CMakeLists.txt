@@ -9,6 +9,7 @@ include_directories(
 add_executable(
   pedal-pi-effects-test
   ymoch/pedalpieffects/math/constexpr-math-test.cc
+  ymoch/pedalpieffects/math/signal-test.cc
 )
 
 target_link_libraries(
