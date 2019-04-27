@@ -8,4 +8,3 @@ typedef double Signal;
 }  // ymoch::pedalpieffects::dsp::type
 
 #endif  // YMOCH_PEDALPIEFFECTS_DSP_TYPE_H_
-
