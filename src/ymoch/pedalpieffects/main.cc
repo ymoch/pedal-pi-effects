@@ -5,12 +5,14 @@
 
 #include <bcm2835.h>
 
+#include "dsp/type.h"
 #include "dsp/normalization.h"
 #include "math/constexpr-math.h"
 
 using std::cout;
 using std::cerr;
 using std::endl;
+using ymoch::pedalpieffects::dsp::type::Signal;
 using ymoch::pedalpieffects::dsp::normalization::Normalizer;
 using ymoch::pedalpieffects::math::constexpr_math::Power;
 
@@ -116,10 +118,10 @@ int main(int argc, char** argv) {
       bcm2835_gpio_write(kPinLed1, !foot_switch_1);
     }
 
-    double normalized_signal = normalizer.Normalize(input_signal);
+    Signal normalized_signal = normalizer.Normalize(input_signal);
 
     // Soft clipping.
-    double amplified_signal = std::tanh(normalized_signal * amplification) / 1.5;
+    Signal amplified_signal = std::tanh(normalized_signal * amplification) / 1.5;
     if (amplified_signal < 0) {
       amplified_signal *= 0.8;
     }
