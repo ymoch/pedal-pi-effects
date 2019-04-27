@@ -9,6 +9,7 @@ include_directories(
 add_executable(
   pedal-pi-effects-test
   ymoch/pedalpieffects/dsp/normalization-test.cc
+  ymoch/pedalpieffects/dsp/effect/amplification-test.cc
   ymoch/pedalpieffects/math/constexpr-math-test.cc
 )
 

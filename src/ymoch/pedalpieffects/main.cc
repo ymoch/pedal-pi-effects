@@ -7,6 +7,7 @@
 
 #include "dsp/type.h"
 #include "dsp/normalization.h"
+#include "dsp/effect/amplification.h"
 #include "math/constexpr-math.h"
 
 using std::cout;
@@ -14,6 +15,7 @@ using std::cerr;
 using std::endl;
 using ymoch::pedalpieffects::dsp::type::Signal;
 using ymoch::pedalpieffects::dsp::normalization::Normalizer;
+using ymoch::pedalpieffects::dsp::effect::amplification::Amplifier;
 using ymoch::pedalpieffects::math::constexpr_math::Power;
 
 namespace {
@@ -84,7 +86,7 @@ int main(int argc, char** argv) {
 
   // Main Loop
   const Normalizer<uint32_t> normalizer(0, Power<2, 12>::value - 1);
-  double amplification = 1.5;
+  Amplifier gain(1.5);
   bool boosted = false;
   for (uint32_t read_timer = 0;; ++read_timer) {
     // read 12 bits ADC
@@ -94,20 +96,20 @@ int main(int argc, char** argv) {
     // Read the controls every 50000 times (0.25s) to save resources.
     constexpr uint32_t kControlCheckInterval = kClockFrequencyHz * 0.25;
     if (read_timer % kControlCheckInterval == 0) {
-      constexpr double kAmplificationDelta = 1.5;
+      constexpr double kGainFactorDelta = 1.5;
 
       uint8_t push_1 = bcm2835_gpio_lev(kPinPush1);
       if (!push_1) {
         bcm2835_delay(100);  // 100ms delay for buttons debouncing.
-        amplification /= kAmplificationDelta;
-        cout << "Amplification: " << amplification << endl;
+        gain.factor(gain.factor() / kGainFactorDelta);
+        cout << "Gain: " << gain.factor() << endl;
       }
 
       uint8_t push_2 = bcm2835_gpio_lev(kPinPush2);
       if (!push_2) {
         bcm2835_delay(100);  // 100ms delay for buttons debouncing.
-        amplification *= kAmplificationDelta;
-        cout << "Amplification: " << amplification << endl;
+        gain.factor(gain.factor() / kGainFactorDelta);
+        cout << "Gain: " << gain.factor() << endl;
       }
 
       uint8_t toggle_switch_1 = bcm2835_gpio_lev(kPinToggleSwitch1);
@@ -121,7 +123,7 @@ int main(int argc, char** argv) {
     Signal normalized_signal = normalizer.Normalize(input_signal);
 
     // Soft clipping.
-    Signal amplified_signal = std::tanh(normalized_signal * amplification) / 1.5;
+    Signal amplified_signal = std::tanh(gain(normalized_signal)) / 1.5;
     if (amplified_signal < 0) {
       amplified_signal *= 0.8;
     }
