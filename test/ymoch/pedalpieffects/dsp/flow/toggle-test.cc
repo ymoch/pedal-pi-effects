@@ -13,8 +13,8 @@ namespace ymoch::pedalpieffects::dsp::flow::toggle {
 
 TEST(Toggle, ProcessesSignalsWhenEnabled) {
   const auto functor = [](Signal _) { return 1.0; };
-  
-  const auto default_toggle = Toggle<decltype(functor)>(functor);
+
+  auto default_toggle = Toggle<decltype(functor)>(functor);
   EXPECT_THAT(default_toggle.enabled(), Eq(false));
   EXPECT_THAT(default_toggle(0.0), DoubleEq(0.0));
   EXPECT_THAT(default_toggle(0.1), DoubleEq(0.1));

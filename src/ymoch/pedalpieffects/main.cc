@@ -6,6 +6,7 @@
 #include <bcm2835.h>
 
 #include "dsp/effect/amplification.h"
+#include "dsp/effect/biquad-filter.h"
 #include "dsp/effect/tube-clipping.h"
 #include "dsp/flow/toggle.h"
 #include "dsp/normalization.h"
@@ -17,6 +18,8 @@ using std::cerr;
 using std::endl;
 using ymoch::pedalpieffects::dsp::type::Signal;
 using ymoch::pedalpieffects::dsp::normalization::Normalizer;
+using ymoch::pedalpieffects::dsp::effect::biquad_filter::BiquadFilter;
+using ymoch::pedalpieffects::dsp::effect::biquad_filter::HighShelfFilter;
 using ymoch::pedalpieffects::dsp::effect::amplification::Amplifier;
 using ymoch::pedalpieffects::dsp::effect::tube_clipping::TubeClipper;
 using ymoch::pedalpieffects::dsp::flow::toggle::Toggle;
@@ -90,10 +93,11 @@ int main(int argc, char** argv) {
 
   // Main Loop
   const Normalizer<uint32_t> normalizer(0, Power<2, 12>::value - 1);
-  Amplifier gain(1.5);
-  const TubeClipper tube_clip;
-  Toggle<Amplifier> dump_volume(Amplifier(0.8));
-  const Amplifier master_volume(1.0 / 1.5);
+  auto input_equalize =
+      Toggle<BiquadFilter>(HighShelfFilter(kClockFrequencyHz, 2000, 0.7, 3.0));
+  auto gain = Amplifier(1.5);
+  const auto tube_clip = TubeClipper();
+  const auto master_volume = Amplifier(1.0 / 1.5);
 
   for (uint32_t read_timer = 0;; ++read_timer) {
     // read 12 bits ADC
@@ -120,8 +124,7 @@ int main(int argc, char** argv) {
       }
 
       uint8_t toggle_switch_1 = bcm2835_gpio_lev(kPinToggleSwitch1);
-      bool toggle_switch_1_is_on = !toggle_switch_1;
-      dump_volume.enabled(!toggle_switch_1_is_on);
+      input_equalize.enabled(!toggle_switch_1);
 
       // light the effect when foot switch 1 is activated.
       uint8_t foot_switch_1 = bcm2835_gpio_lev(kPinFootSwitch1);
@@ -129,9 +132,9 @@ int main(int argc, char** argv) {
     }
 
     Signal signal = normalizer.Normalize(input_signal);
+    signal = input_equalize(signal);
     signal = gain(signal);
     signal = tube_clip(signal);
-    signal = dump_volume(signal);
     signal = master_volume(signal);
 
     // generate output PWM signal 6 bits
