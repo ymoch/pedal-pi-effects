@@ -7,6 +7,7 @@
 
 #include "dsp/effect/amplification.h"
 #include "dsp/effect/tube-clipping.h"
+#include "dsp/flow/toggle.h"
 #include "dsp/normalization.h"
 #include "dsp/type.h"
 #include "math/constexpr-math.h"
@@ -18,6 +19,7 @@ using ymoch::pedalpieffects::dsp::type::Signal;
 using ymoch::pedalpieffects::dsp::normalization::Normalizer;
 using ymoch::pedalpieffects::dsp::effect::amplification::Amplifier;
 using ymoch::pedalpieffects::dsp::effect::tube_clipping::TubeClipper;
+using ymoch::pedalpieffects::dsp::flow::toggle::Toggle;
 using ymoch::pedalpieffects::math::constexpr_math::Power;
 
 namespace {
@@ -90,10 +92,9 @@ int main(int argc, char** argv) {
   const Normalizer<uint32_t> normalizer(0, Power<2, 12>::value - 1);
   Amplifier gain(1.5);
   const TubeClipper tube_clip;
-  const Amplifier dump_volume(0.8);
+  Toggle<Amplifier> dump_volume(Amplifier(0.8));
   const Amplifier master_volume(1.0 / 1.5);
 
-  bool boosted = false;
   for (uint32_t read_timer = 0;; ++read_timer) {
     // read 12 bits ADC
     bcm2835_spi_transfernb(mosi, miso, 3);
@@ -119,7 +120,8 @@ int main(int argc, char** argv) {
       }
 
       uint8_t toggle_switch_1 = bcm2835_gpio_lev(kPinToggleSwitch1);
-      boosted = !toggle_switch_1;
+      bool toggle_switch_1_is_on = !toggle_switch_1;
+      dump_volume.enabled(!toggle_switch_1_is_on);
 
       // light the effect when foot switch 1 is activated.
       uint8_t foot_switch_1 = bcm2835_gpio_lev(kPinFootSwitch1);
@@ -129,9 +131,7 @@ int main(int argc, char** argv) {
     Signal signal = normalizer.Normalize(input_signal);
     signal = gain(signal);
     signal = tube_clip(signal);
-    if (!boosted) {
-      signal = dump_volume(signal);
-    }
+    signal = dump_volume(signal);
     signal = master_volume(signal);
 
     // generate output PWM signal 6 bits

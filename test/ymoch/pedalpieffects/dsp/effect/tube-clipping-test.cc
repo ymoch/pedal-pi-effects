@@ -14,5 +14,4 @@ TEST(TubeClipper, ClipsSignal) {
   EXPECT_THAT(clipper(0.0), DoubleEq(0.0));
   EXPECT_THAT(clipper(10000.0), DoubleEq(1.0));
 }
-
 }
