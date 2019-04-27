@@ -1,4 +1,4 @@
-#include "ymoch/pedalpieffects/math/signal.h"
+#include "ymoch/pedalpieffects/dsp/normalization.h"
 
 #include <cstdint>
 
@@ -7,7 +7,8 @@
 
 using testing::Eq;
 using testing::DoubleEq;
-using ymoch::pedalpieffects::math::signal::Normalizer;
+
+namespace ymoch::pedalpieffects::dsp::normalization {
 
 TEST(NormalizerTest, NormalizesSignal) {
   const Normalizer<uint32_t> normalizer(8, 16);
@@ -20,13 +21,15 @@ TEST(NormalizerTest, NormalizesSignal) {
   EXPECT_THAT(normalizer.Normalize(17), DoubleEq(1.25));
 }
 
-TEST(NormalizeTest, UnnormalizesSingal) {
+TEST(NormalizerTest, UnnormalizesSingal) {
   const Normalizer<uint32_t> normalizer(8, 16);
 
-  EXPECT_THAT(normalizer.Unnormalize(-1.25), Eq(8)); // saturation
+  EXPECT_THAT(normalizer.Unnormalize(-1.25), Eq(8));  // saturation
   EXPECT_THAT(normalizer.Unnormalize(-1.0), Eq(8));
   EXPECT_THAT(normalizer.Unnormalize(-0.75), Eq(9));
   EXPECT_THAT(normalizer.Unnormalize(0.75), Eq(15));
   EXPECT_THAT(normalizer.Unnormalize(1.0), Eq(16));
-  EXPECT_THAT(normalizer.Unnormalize(1.25), Eq(16)); // saturation
+  EXPECT_THAT(normalizer.Unnormalize(1.25), Eq(16));  // saturation
 }
+
+}  // ymoch::pedalpieffects::dsp::normalization

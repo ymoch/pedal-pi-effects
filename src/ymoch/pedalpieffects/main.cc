@@ -5,14 +5,14 @@
 
 #include <bcm2835.h>
 
+#include "dsp/normalization.h"
 #include "math/constexpr-math.h"
-#include "math/signal.h"
 
 using std::cout;
 using std::cerr;
 using std::endl;
+using ymoch::pedalpieffects::dsp::normalization::Normalizer;
 using ymoch::pedalpieffects::math::constexpr_math::Power;
-using ymoch::pedalpieffects::math::signal::Normalizer;
 
 namespace {
 

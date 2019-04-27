@@ -1,7 +1,7 @@
-#ifndef YMOCH_PEDALPIEFFECTS_MATH_SIGNAL_H_
-#define YMOCH_PEDALPIEFFECTS_MATH_SIGNAL_H_
+#ifndef YMOCH_PEDALPIEFFECTS_DSP_NORMALIZATION_H_
+#define YMOCH_PEDALPIEFFECTS_DSP_NORMALIZATION_H_
 
-namespace ymoch::pedalpieffects::math::signal {
+namespace ymoch::pedalpieffects::dsp::normalization {
 
 template <typename T>
 class Normalizer {
@@ -40,4 +40,4 @@ class Normalizer {
 
 }  // ymoch::pedalpieffects::math::signal
 
-#endif  // YMOCH_PEDALPIEFFECTS_MATH_SIGNAL_H_
+#endif  // YMOCH_PEDALPIEFFECTS_DSP_NORMALIZATION_H_
