@@ -5,9 +5,12 @@
 
 #include <bcm2835.h>
 
+#include "math/constexpr-math.h"
+
 using std::cout;
 using std::cerr;
 using std::endl;
+using ymoch::pedalpieffects::math::constexpr_math::Power;
 
 namespace {
 
@@ -35,15 +38,6 @@ class SignalNormalizer {
   T upper_limit_;
   double width_;
   double offset_;
-};
-
-template <uint32_t base, uint32_t exponent>
-struct Power {
-  constexpr static uint32_t value = base * Power<base, exponent - 1>::value;
-};
-template <uint32_t base>
-struct Power<base, 0> {
-  constexpr static uint32_t value = 1;
 };
 
 constexpr uint8_t kPwmChannel0 = 0;

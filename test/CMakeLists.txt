@@ -2,9 +2,13 @@ cmake_minimum_required(VERSION 3.7)
 
 add_definitions(-std=c++17 -Wall)
 
+include_directories(
+  ../src
+)
+
 add_executable(
   pedal-pi-effects-test
-  main.cc
+  ymoch/pedalpieffects/math/constexpr-math-test.cc
 )
 
 target_link_libraries(
