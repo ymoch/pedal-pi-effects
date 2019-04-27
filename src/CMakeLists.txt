@@ -8,8 +8,3 @@ add_executable(
 )
 
 target_link_libraries(pedal-pi-effects bcm2835)
-
-install(
-  TARGETS pedal-pi-effects
-  DESTINATION bin
-)

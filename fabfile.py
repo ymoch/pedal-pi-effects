@@ -9,26 +9,39 @@ SERVICE_NAME = 'pedal-pi-effects.service'
 
 
 @task
+def install_cmake(c):
+    c.sudo('apt-get install -y cmake')
+
+
+@task
 def install_bcm2835(c):
     # See: https://www.electrosmash.com/forum/pedal-pi/202-how-to-start-programming-pedal-pi
     url = 'http://www.airspayce.com/mikem/bcm2835/bcm2835-1.58.tar.gz'
     dir_name = 'bcm2835-1.58'
 
     c.run(f'rm -rf {dir_name}')
-
     c.run(f'curl -s "{url}" | tar zxf -')
     with c.cd(dir_name):
         c.run('./configure')
         c.run('make')
-
     c.sudo(f'bash -c \'cd "{dir_name}" && make install\'')
 
     c.run(f'rm -rf {dir_name}')
 
 
 @task
-def install_cmake(c):
-    c.sudo('apt-get install -y cmake')
+def install_google_test(c):
+    url = 'https://codeload.github.com/google/googletest/tar.gz/release-1.8.1'
+    dir_name = 'google-test-relase-1.8.1'
+
+    c.run(f'rm -rf {dir_name}')
+    c.run(f'curl -s "{url}" | tar zxf -')
+    with c.cd(dir_name):
+        c.run('cmake .')
+        c.run('make')
+    c.sudo(f'bash -c \'cd "{dir_name}" && make install\'')
+
+    c.run(f'rm -rf {dir_name}')
 
 
 @task
@@ -49,6 +62,7 @@ def install(c, clean_build=False):
     with c.cd(dir_name):
         c.run('cmake .')
         c.run('make')
+        c.run('make test')
 
     c.sudo(f'bash -c \'cd "{dir_name}" && make install\'')
 
@@ -86,5 +100,6 @@ def deploy(c, clean_build=False):
 
 @task
 def provision(c):
+    install_cmake(c)
     install_bcm2835(c)
     install_cmake(c)
