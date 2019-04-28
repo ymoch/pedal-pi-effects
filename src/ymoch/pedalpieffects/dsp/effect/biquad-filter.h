@@ -2,7 +2,6 @@
 #define YMOCH_PEDALPIEFFECTS_DSP_EFFECT_BIQUAD_FILTER_H_
 
 #include <cmath>
-#include <iostream>
 
 #include "ymoch/pedalpieffects/dsp/type.h"
 
@@ -23,7 +22,7 @@ class BiquadFilter {
 
   BiquadFilter(double a0, double a1, double a2, double b0, double b1, double b2)
       // When given a0, normalize coefficients by a0.
-      : BiquadFilter(a1 / a0, a2 / a0, b0 / a0, b1 / b0, b2 / a0) {}
+      : BiquadFilter(a1 / a0, a2 / a0, b0 / a0, b1 / a0, b2 / a0) {}
 
   type::Signal operator()(type::Signal in) {
     // See: https://en.wikipedia.org/wiki/Digital_biquad_filter#Direct_form_1
@@ -51,21 +50,24 @@ class BiquadFilter {
 };
 
 inline BiquadFilter HighShelfFilter(double sampling_rate, double frequency,
-                                    double q, double gain) {
-  const double omega = 2.0 * M_PI * frequency * sampling_rate;
-  const double a = std::pow(10.0, gain / 40.0);
-  const double beta = std::sqrt(a) / q;
-
+                                    double q, double gain_db) {
+  const double omega = 2.0 * M_PI * frequency / sampling_rate;
   const double cos_omega = std::cos(omega);
   const double sin_omega = std::sin(omega);
+  const double a = std::pow(10.0, gain_db / 40.0);
+  const double alpha = sin_omega / 2.0 / q;
+  const double beta = 2.0 * std::sqrt(a) * alpha;
 
+  // clang-format off
   return BiquadFilter(
-      (a + 1.0) - (a - 1.0) * cos_omega + beta * sin_omega,
-      2.0 * ((a - 1.0) - (a + 1.0) * cos_omega),
-      (a + 1.0) - (a - 1.0) * cos_omega - beta * sin_omega,
-      a * ((a + 1.0) + (a - 1.0) * cos_omega + beta * sin_omega),
-      -2.0 * a * ((a - 1.0) + (a + 1.0) * cos_omega),
-      a * ((a + 1.0) + (a - 1.0) * cos_omega - beta * sin_omega));
+                  (a + 1.0) - (a - 1.0) * cos_omega + beta,
+           2.0 * ((a - 1.0) - (a + 1.0) * cos_omega       ),
+                  (a + 1.0) - (a - 1.0) * cos_omega - beta,
+             a * ((a + 1.0) + (a - 1.0) * cos_omega + beta),
+      -2.0 * a * ((a - 1.0) + (a + 1.0) * cos_omega       ),
+             a * ((a + 1.0) + (a - 1.0) * cos_omega - beta)
+  );
+  // clang-format on
 }
 
 }  // ymoch::pedalpieffects::dsp::effect::biquad_filter

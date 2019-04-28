@@ -11,6 +11,7 @@ add_executable(
   pedal-pi-effects-test
   ymoch/pedalpieffects/dsp/normalization-test.cc
   ymoch/pedalpieffects/dsp/effect/amplification-test.cc
+  ymoch/pedalpieffects/dsp/effect/biquad-filter-test.cc
   ymoch/pedalpieffects/dsp/effect/tube-clipping-test.cc
   ymoch/pedalpieffects/dsp/flow/toggle-test.cc
   ymoch/pedalpieffects/math/constexpr-math-test.cc
