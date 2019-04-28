@@ -5,14 +5,12 @@
 
 namespace ymoch::pedalpieffects::math::constexpr_math {
 
-template <uint32_t base, uint32_t exponent>
-struct Power {
-  constexpr static uint32_t value = base * Power<base, exponent - 1>::value;
-};
-template <uint32_t base>
-struct Power<base, 0> {
-  constexpr static uint32_t value = 1;
-};
+inline constexpr uint32_t power(uint32_t base, uint32_t exponent) {
+  if (exponent == 0) {
+    return 1;
+  }
+  return base * power(base, exponent - 1);
+}
 
 }  // ymoch::pedalpieffects::constexpr_math
 

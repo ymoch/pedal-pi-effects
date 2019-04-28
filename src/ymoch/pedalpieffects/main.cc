@@ -27,7 +27,7 @@ using ymoch::pedalpieffects::dsp::effect::amplification::Amplifier;
 using ymoch::pedalpieffects::dsp::effect::tube_clipping::TubeClipper;
 using ymoch::pedalpieffects::dsp::flow::chain::MakeChain;
 using ymoch::pedalpieffects::dsp::flow::toggle::MakeToggle;
-using ymoch::pedalpieffects::math::constexpr_math::Power;
+using ymoch::pedalpieffects::math::constexpr_math::power;
 
 namespace {
 
@@ -37,7 +37,7 @@ constexpr uint32_t kNumBit = 6;
 constexpr bool kPwmMarkSpaceEnabled = true;
 constexpr bool kPwmChannelEnabled = true;
 constexpr uint32_t kPwmClockDivider = BCM2835_PWM_CLOCK_DIVIDER_2;
-constexpr uint32_t kPwmRange = Power<2, kNumBit>::value - 1;
+constexpr uint32_t kPwmRange = power(2, kNumBit) - 1;
 
 constexpr uint32_t kSpiClockDivider = BCM2835_SPI_CLOCK_DIVIDER_64;
 
@@ -123,7 +123,7 @@ int main(int argc, char** argv) {
   );
   // clang-format on
 
-  const Normalizer<uint32_t> normalizer(0, Power<2, 12>::value - 1);
+  const Normalizer<uint32_t> normalizer(0, power(2, 12) - 1);
 
   // Main Loop
   for (uint32_t read_timer = 0;; ++read_timer) {
