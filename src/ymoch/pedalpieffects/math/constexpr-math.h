@@ -6,10 +6,11 @@
 namespace ymoch::pedalpieffects::math::constexpr_math {
 
 inline constexpr uint32_t power(uint32_t base, uint32_t exponent) {
-  if (exponent == 0) {
-    return 1;
+  uint32_t out = 1;
+  for (auto exp = exponent; exp > 0; --exp) {
+    out *= base;
   }
-  return base * power(base, exponent - 1);
+  return out;
 }
 
 }  // ymoch::pedalpieffects::constexpr_math
