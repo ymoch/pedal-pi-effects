@@ -101,6 +101,7 @@ int main(int argc, char** argv) {
   auto gain_equalize3 = HighShelfFilter(kClockFrequencyHz, 1500, 0.7, 12.0);
   auto gain = Amplifier(1.5);
   const auto tube_clip = TubeClipper();
+  auto tube_high_pass = HighPassFilter(kClockFrequencyHz, 5, 0.7);
   const auto master_volume = Amplifier(1.0 / 1.5);
 
   for (uint32_t read_timer = 0;; ++read_timer) {
@@ -141,6 +142,7 @@ int main(int argc, char** argv) {
     signal = gain_equalize3(signal);
     signal = gain(signal);
     signal = tube_clip(signal);
+    signal = tube_high_pass(signal);
     signal = master_volume(signal);
 
     // generate output PWM signal 6 bits
