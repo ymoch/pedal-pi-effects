@@ -6,46 +6,23 @@
 #include <gtest/gtest.h>
 
 #include "ymoch/pedalpieffects/dsp/type.h"
+#include "ymoch/pedalpieffects/dsp/oscillation.h"
 
 using testing::AllOf;
 using testing::Gt;
 using testing::Lt;
+using ymoch::pedalpieffects::dsp::oscillation::SineOscillator;
 
 namespace ymoch::pedalpieffects::dsp::effect::biquad_filter {
-
-namespace {
-class SineOscillator {
- public:
-  explicit SineOscillator(double period) : period_(period), phase_(0.0) {}
-
-  SineOscillator(double sampling_rate, double frequency)
-      : SineOscillator(kBasePeriod * frequency / sampling_rate) {}
-
-  type::Signal operator()() {
-    const type::Signal signal = std::sin(phase_);
-    phase_ += period_;
-    while (phase_ > kBasePeriod) {
-      phase_ -= kBasePeriod;  // To keep the resolution.
-    }
-    return signal;
-  }
-
- private:
-  static constexpr double kBasePeriod = 2.0 * M_PI;
-  double period_;
-  double phase_;
-};
-
-}  // anonymous namespace
 
 TEST(HighShelfFilter, DoesNotAffectLowFrequencyWaves) {
   constexpr double kSamplingRateHz = 2000;
   constexpr double kFrequencyHz = 50;
-  SineOscillator osc(kSamplingRateHz, kFrequencyHz);
+  auto osc = SineOscillator::OfSampling(kSamplingRateHz, kFrequencyHz);
 
   constexpr double kFilterFrequencyHz = 500;
   BiquadFilter filter =
-      HighShelfFilter(kSamplingRateHz, kFilterFrequencyHz, 1.0, 1.0);
+      HighShelfFilter(kSamplingRateHz, kFilterFrequencyHz, 0.7, 1.0);
 
   type::Signal raw_min = 0.0;
   type::Signal raw_max = 0.0;
