@@ -49,6 +49,44 @@ class BiquadFilter {
   type::Signal out2_;
 };
 
+inline BiquadFilter LowPassFilter(double sampling_rate, double frequency,
+                                  double q) {
+  const double omega = 2.0 * M_PI * frequency / sampling_rate;
+  const double cos_omega = std::cos(omega);
+  const double sin_omega = std::sin(omega);
+  const double alpha = sin_omega / 2.0 / q;
+
+  // clang-format off
+  return BiquadFilter(
+       1.0 + alpha,
+      -2.0 * cos_omega,
+       1.0 - alpha,
+      (1.0 - cos_omega) / 2.0,
+       1.0 - cos_omega,
+      (1.0 - cos_omega) / 2.0
+  );
+  // clang-format on
+}
+
+inline BiquadFilter HighPassFilter(double sampling_rate, double frequency,
+                                   double q) {
+  const double omega = 2.0 * M_PI * frequency / sampling_rate;
+  const double cos_omega = std::cos(omega);
+  const double sin_omega = std::sin(omega);
+  const double alpha = sin_omega / 2.0 / q;
+
+  // clang-format off
+  return BiquadFilter(
+        1.0 + alpha,
+       -2.0 * cos_omega,
+        1.0 - alpha,
+       (1.0 + cos_omega) / 2.0,
+      -(1.0 + cos_omega),
+       (1.0 + cos_omega) / 2.0
+  );
+  // clang-format on
+}
+
 inline BiquadFilter HighShelfFilter(double sampling_rate, double frequency,
                                     double q, double gain_db) {
   const double omega = 2.0 * M_PI * frequency / sampling_rate;

@@ -19,6 +19,8 @@ using std::endl;
 using ymoch::pedalpieffects::dsp::type::Signal;
 using ymoch::pedalpieffects::dsp::normalization::Normalizer;
 using ymoch::pedalpieffects::dsp::effect::biquad_filter::BiquadFilter;
+using ymoch::pedalpieffects::dsp::effect::biquad_filter::LowPassFilter;
+using ymoch::pedalpieffects::dsp::effect::biquad_filter::HighPassFilter;
 using ymoch::pedalpieffects::dsp::effect::biquad_filter::HighShelfFilter;
 using ymoch::pedalpieffects::dsp::effect::amplification::Amplifier;
 using ymoch::pedalpieffects::dsp::effect::tube_clipping::TubeClipper;
@@ -93,8 +95,10 @@ int main(int argc, char** argv) {
 
   // Main Loop
   const Normalizer<uint32_t> normalizer(0, Power<2, 12>::value - 1);
-  auto input_equalize =
-      Toggle<BiquadFilter>(HighShelfFilter(kClockFrequencyHz, 1500, 0.7, 12.0));
+  auto gain_equalize1 =
+      Toggle<BiquadFilter>(HighPassFilter(kClockFrequencyHz, 5, 0.7));
+  auto gain_equalize2 = LowPassFilter(kClockFrequencyHz, 15000, 0.7);
+  auto gain_equalize3 = HighShelfFilter(kClockFrequencyHz, 1500, 0.7, 12.0);
   auto gain = Amplifier(1.5);
   const auto tube_clip = TubeClipper();
   const auto master_volume = Amplifier(1.0 / 1.5);
@@ -124,7 +128,7 @@ int main(int argc, char** argv) {
       }
 
       uint8_t toggle_switch_1 = bcm2835_gpio_lev(kPinToggleSwitch1);
-      input_equalize.enabled(!toggle_switch_1);
+      gain_equalize1.enabled(!toggle_switch_1);
 
       // light the effect when foot switch 1 is activated.
       uint8_t foot_switch_1 = bcm2835_gpio_lev(kPinFootSwitch1);
@@ -132,7 +136,9 @@ int main(int argc, char** argv) {
     }
 
     Signal signal = normalizer.Normalize(input_signal);
-    signal = input_equalize(signal);
+    signal = gain_equalize1(signal);
+    signal = gain_equalize2(signal);
+    signal = gain_equalize3(signal);
     signal = gain(signal);
     signal = tube_clip(signal);
     signal = master_volume(signal);

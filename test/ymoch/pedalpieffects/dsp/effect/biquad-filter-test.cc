@@ -5,8 +5,8 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
-#include "ymoch/pedalpieffects/dsp/type.h"
 #include "ymoch/pedalpieffects/dsp/oscillation.h"
+#include "ymoch/pedalpieffects/dsp/type.h"
 
 using testing::AllOf;
 using testing::Gt;
@@ -24,9 +24,9 @@ auto CloseTo(double expected) -> decltype(AllOf(Gt(0.0), Lt(0.0))) {
 }
 
 template <typename T>
-void TestSineWaveAmplitude(
-    T& filter, double sampling_rate_hz, double frequency_hz,
-    double expected_min, double expected_max) {
+void TestSineWaveAmplitude(T& filter, double sampling_rate_hz,
+                           double frequency_hz, double expected_min,
+                           double expected_max) {
   auto osc = SineOscillator::OfSampling(sampling_rate_hz, frequency_hz);
 
   const int num_sample = static_cast<int>(sampling_rate_hz) * 10;
