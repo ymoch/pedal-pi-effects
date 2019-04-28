@@ -19,7 +19,7 @@ using std::cerr;
 using std::endl;
 using ymoch::pedalpieffects::dsp::type::Signal;
 using ymoch::pedalpieffects::dsp::normalization::Normalizer;
-using ymoch::pedalpieffects::dsp::effect::biquad_filter::BiquadFilter;
+using ymoch::pedalpieffects::dsp::effect::biquad_filter::kDefaultQ;
 using ymoch::pedalpieffects::dsp::effect::biquad_filter::LowPassFilter;
 using ymoch::pedalpieffects::dsp::effect::biquad_filter::HighPassFilter;
 using ymoch::pedalpieffects::dsp::effect::biquad_filter::HighShelfFilter;
@@ -48,7 +48,10 @@ constexpr uint8_t kPinPush2 = RPI_V2_GPIO_P1_38;
 constexpr uint8_t kPinToggleSwitch1 = RPI_V2_GPIO_P1_32;
 constexpr uint8_t kPinFootSwitch1 = RPI_GPIO_P1_10;
 constexpr uint8_t kPinLed1 = RPI_V2_GPIO_P1_36;
-}
+
+constexpr double kMinFrequencyHz = 5.0;
+
+}  // anonymous namespace
 
 int main(int argc, char** argv) {
   if (!bcm2835_init()) {
@@ -95,20 +98,21 @@ int main(int argc, char** argv) {
   bcm2835_gpio_set_pud(kPinToggleSwitch1, BCM2835_GPIO_PUD_UP);
   bcm2835_gpio_set_pud(kPinFootSwitch1, BCM2835_GPIO_PUD_UP);
 
-  // Main Loop
-  auto pre_low_cut = MakeToggle(HighPassFilter(kClockFrequencyHz, 5, 0.7));
+  // clang-format off
+  auto pre_low_cut = MakeToggle(
+      HighPassFilter(kClockFrequencyHz, kMinFrequencyHz, kDefaultQ)
+  );
   auto overdrive_gain = Amplifier(1.5);
 
-  // clang-format off
   auto input_equalize = MakeChain(
       pre_low_cut,
-      LowPassFilter(kClockFrequencyHz, 15000, 0.7),
-      HighShelfFilter(kClockFrequencyHz, 1500, 0.7, 12.0)
+      LowPassFilter(kClockFrequencyHz, 15000, kDefaultQ),
+      HighShelfFilter(kClockFrequencyHz, 1500, kDefaultQ, 12.0)
   );
   auto overdrive = MakeChain(
       overdrive_gain,
       TubeClipper(),
-      HighPassFilter(kClockFrequencyHz, 5, 0.7)
+      HighPassFilter(kClockFrequencyHz, kMinFrequencyHz, kDefaultQ)
   );
   const auto master_volume = Amplifier(1.0 / 1.5);
 
@@ -120,6 +124,8 @@ int main(int argc, char** argv) {
   // clang-format on
 
   const Normalizer<uint32_t> normalizer(0, Power<2, 12>::value - 1);
+
+  // Main Loop
   for (uint32_t read_timer = 0;; ++read_timer) {
     // read 12 bits ADC
     bcm2835_spi_transfernb(mosi, miso, 3);

@@ -68,6 +68,8 @@ inline BiquadFilter LowPassFilter(double sampling_rate, double frequency,
   // clang-format on
 }
 
+constexpr double kDefaultQ = 1.0 / 1.41421356237;  // 1 / sqrt(2)
+
 inline BiquadFilter HighPassFilter(double sampling_rate, double frequency,
                                    double q) {
   const double omega = 2.0 * M_PI * frequency / sampling_rate;
