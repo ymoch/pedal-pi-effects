@@ -18,8 +18,9 @@ class Toggle {
   bool enabled(bool enabled) { return enabled_ = enabled; }
 
   type::Signal operator()(type::Signal signal) {
+    const auto processed_signal = functor_(signal);
     if (enabled_) {
-      return functor_(signal);
+      return processed_signal;
     }
     return signal;
   }
