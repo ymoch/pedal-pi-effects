@@ -8,6 +8,7 @@
 #include "dsp/effect/amplification.h"
 #include "dsp/effect/biquad-filter.h"
 #include "dsp/effect/tube-clipping.h"
+#include "dsp/flow/chain.h"
 #include "dsp/flow/toggle.h"
 #include "dsp/normalization.h"
 #include "dsp/type.h"
@@ -24,6 +25,7 @@ using ymoch::pedalpieffects::dsp::effect::biquad_filter::HighPassFilter;
 using ymoch::pedalpieffects::dsp::effect::biquad_filter::HighShelfFilter;
 using ymoch::pedalpieffects::dsp::effect::amplification::Amplifier;
 using ymoch::pedalpieffects::dsp::effect::tube_clipping::TubeClipper;
+using ymoch::pedalpieffects::dsp::flow::chain::MakeChain;
 using ymoch::pedalpieffects::dsp::flow::toggle::MakeToggle;
 using ymoch::pedalpieffects::math::constexpr_math::Power;
 
@@ -94,15 +96,30 @@ int main(int argc, char** argv) {
   bcm2835_gpio_set_pud(kPinFootSwitch1, BCM2835_GPIO_PUD_UP);
 
   // Main Loop
-  const Normalizer<uint32_t> normalizer(0, Power<2, 12>::value - 1);
-  auto gain_equalize1 = MakeToggle(HighPassFilter(kClockFrequencyHz, 5, 0.7));
-  auto gain_equalize2 = LowPassFilter(kClockFrequencyHz, 15000, 0.7);
-  auto gain_equalize3 = HighShelfFilter(kClockFrequencyHz, 1500, 0.7, 12.0);
-  auto gain = Amplifier(1.5);
-  const auto tube_clip = TubeClipper();
-  auto tube_high_pass = HighPassFilter(kClockFrequencyHz, 5, 0.7);
+  auto pre_low_cut = MakeToggle(HighPassFilter(kClockFrequencyHz, 5, 0.7));
+  auto overdrive_gain = Amplifier(1.5);
+
+  // clang-format off
+  auto input_equalize = MakeChain(
+      pre_low_cut,
+      LowPassFilter(kClockFrequencyHz, 15000, 0.7),
+      HighShelfFilter(kClockFrequencyHz, 1500, 0.7, 12.0)
+  );
+  auto overdrive = MakeChain(
+      overdrive_gain,
+      TubeClipper(),
+      HighPassFilter(kClockFrequencyHz, 5, 0.7)
+  );
   const auto master_volume = Amplifier(1.0 / 1.5);
 
+  auto effect = MakeChain(
+      input_equalize,
+      overdrive,
+      master_volume
+  );
+  // clang-format on
+
+  const Normalizer<uint32_t> normalizer(0, Power<2, 12>::value - 1);
   for (uint32_t read_timer = 0;; ++read_timer) {
     // read 12 bits ADC
     bcm2835_spi_transfernb(mosi, miso, 3);
@@ -116,33 +133,26 @@ int main(int argc, char** argv) {
       uint8_t push_1 = bcm2835_gpio_lev(kPinPush1);
       if (!push_1) {
         bcm2835_delay(100);  // 100ms delay for buttons debouncing.
-        gain.factor(gain.factor() / kGainFactorDelta);
-        cout << "Gain: " << gain.factor() << endl;
+        overdrive_gain.factor(overdrive_gain.factor() / kGainFactorDelta);
+        cout << "Gain: " << overdrive_gain.factor() << endl;
       }
 
       uint8_t push_2 = bcm2835_gpio_lev(kPinPush2);
       if (!push_2) {
         bcm2835_delay(100);  // 100ms delay for buttons debouncing.
-        gain.factor(gain.factor() * kGainFactorDelta);
-        cout << "Gain: " << gain.factor() << endl;
+        overdrive_gain.factor(overdrive_gain.factor() * kGainFactorDelta);
+        cout << "Gain: " << overdrive_gain.factor() << endl;
       }
 
       uint8_t toggle_switch_1 = bcm2835_gpio_lev(kPinToggleSwitch1);
-      gain_equalize1.enabled(!toggle_switch_1);
+      pre_low_cut.enabled(!toggle_switch_1);
 
       // light the effect when foot switch 1 is activated.
       uint8_t foot_switch_1 = bcm2835_gpio_lev(kPinFootSwitch1);
       bcm2835_gpio_write(kPinLed1, !foot_switch_1);
     }
 
-    Signal signal = normalizer.Normalize(input_signal);
-    signal = gain_equalize1(signal);
-    signal = gain_equalize2(signal);
-    signal = gain_equalize3(signal);
-    signal = gain(signal);
-    signal = tube_clip(signal);
-    signal = tube_high_pass(signal);
-    signal = master_volume(signal);
+    Signal signal = effect(normalizer.Normalize(input_signal));
 
     // generate output PWM signal 6 bits
     uint32_t output_signal = normalizer.Unnormalize(signal);
