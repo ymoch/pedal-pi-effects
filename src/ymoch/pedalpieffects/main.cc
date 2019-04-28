@@ -94,7 +94,7 @@ int main(int argc, char** argv) {
   // Main Loop
   const Normalizer<uint32_t> normalizer(0, Power<2, 12>::value - 1);
   auto input_equalize =
-      Toggle<BiquadFilter>(HighShelfFilter(kClockFrequencyHz, 2000, 0.7, 3.0));
+      Toggle<BiquadFilter>(HighShelfFilter(kClockFrequencyHz, 1500, 0.7, 12.0));
   auto gain = Amplifier(1.5);
   const auto tube_clip = TubeClipper();
   const auto master_volume = Amplifier(1.0 / 1.5);
