@@ -30,6 +30,16 @@ class Toggle {
   bool enabled_;
 };
 
+template <typename T>
+Toggle<T> MakeToggle(const T& functor) {
+  return Toggle<T>(functor);
+}
+
+template <typename T>
+Toggle<T> MakeToggle(const T& functor, bool enabled) {
+  return Toggle<T>(functor, enabled);
+}
+
 }  // ymoch::pedalpieffects::dsp::flow::toggle
 
 #endif  // YMOCH_PEDALPIEFFECTS_DSP_FLOW_TOGGLE_H_

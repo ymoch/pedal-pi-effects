@@ -24,7 +24,7 @@ using ymoch::pedalpieffects::dsp::effect::biquad_filter::HighPassFilter;
 using ymoch::pedalpieffects::dsp::effect::biquad_filter::HighShelfFilter;
 using ymoch::pedalpieffects::dsp::effect::amplification::Amplifier;
 using ymoch::pedalpieffects::dsp::effect::tube_clipping::TubeClipper;
-using ymoch::pedalpieffects::dsp::flow::toggle::Toggle;
+using ymoch::pedalpieffects::dsp::flow::toggle::MakeToggle;
 using ymoch::pedalpieffects::math::constexpr_math::Power;
 
 namespace {
@@ -95,8 +95,7 @@ int main(int argc, char** argv) {
 
   // Main Loop
   const Normalizer<uint32_t> normalizer(0, Power<2, 12>::value - 1);
-  auto gain_equalize1 =
-      Toggle<BiquadFilter>(HighPassFilter(kClockFrequencyHz, 5, 0.7));
+  auto gain_equalize1 = MakeToggle(HighPassFilter(kClockFrequencyHz, 5, 0.7));
   auto gain_equalize2 = LowPassFilter(kClockFrequencyHz, 15000, 0.7);
   auto gain_equalize3 = HighShelfFilter(kClockFrequencyHz, 1500, 0.7, 12.0);
   auto gain = Amplifier(1.5);
