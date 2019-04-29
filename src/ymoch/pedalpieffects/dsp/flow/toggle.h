@@ -1,24 +1,28 @@
 #ifndef YMOCH_PEDALPIEFFECTS_DSP_FLOW_TOGGLE_H_
 #define YMOCH_PEDALPIEFFECTS_DSP_FLOW_TOGGLE_H_
 
+#include <utility>
+
 #include "ymoch/pedalpieffects/dsp/type.h"
 
 namespace ymoch::pedalpieffects::dsp::flow::toggle {
 
-template <typename Functor>
+template <typename T>
 class Toggle {
  public:
-  explicit Toggle(const Functor& functor) : Toggle(functor, false) {}
-
-  Toggle(const Functor& functor, bool enabled)
-      : functor_(functor), enabled_(enabled) {}
+  explicit Toggle(T&& effect, bool enabled = false)
+      : effect_(effect), enabled_(enabled) {}
 
   bool enabled() const { return enabled_; }
 
   bool enabled(bool enabled) { return enabled_ = enabled; }
 
+  T& effect() { return effect_; }
+
+  const T& effect() const { return effect_; }
+
   type::Signal operator()(type::Signal signal) {
-    const auto processed_signal = functor_(signal);
+    const auto processed_signal = effect_(signal);
     if (enabled_) {
       return processed_signal;
     }
@@ -26,18 +30,13 @@ class Toggle {
   }
 
  private:
-  Functor functor_;
+  T effect_;
   bool enabled_;
 };
 
 template <typename T>
-Toggle<T> MakeToggle(const T& functor) {
-  return Toggle<T>(functor);
-}
-
-template <typename T>
-Toggle<T> MakeToggle(const T& functor, bool enabled) {
-  return Toggle<T>(functor, enabled);
+Toggle<T> MakeToggle(T&& effect, bool enabled = false) {
+  return Toggle<T>(std::move(effect), enabled);
 }
 
 }  // ymoch::pedalpieffects::dsp::flow::toggle
