@@ -7,6 +7,8 @@
 
 namespace ymoch::pedalpieffects::dsp::effect::biquad_filter {
 
+constexpr double kDefaultQ = 1.41421356237 / 2.0;  // 1 / sqrt(2) = sqrt(2) / 2
+
 class BiquadFilter {
  public:
   BiquadFilter(double a1, double a2, double b0, double b1, double b2)
@@ -50,7 +52,7 @@ class BiquadFilter {
 };
 
 inline BiquadFilter LowPassFilter(double sampling_rate, double frequency,
-                                  double q) {
+                                  double q = kDefaultQ) {
   const double omega = 2.0 * M_PI * frequency / sampling_rate;
   const double cos_omega = std::cos(omega);
   const double sin_omega = std::sin(omega);
@@ -68,10 +70,8 @@ inline BiquadFilter LowPassFilter(double sampling_rate, double frequency,
   // clang-format on
 }
 
-constexpr double kDefaultQ = 1.0 / 1.41421356237;  // 1 / sqrt(2)
-
 inline BiquadFilter HighPassFilter(double sampling_rate, double frequency,
-                                   double q) {
+                                   double q = kDefaultQ) {
   const double omega = 2.0 * M_PI * frequency / sampling_rate;
   const double cos_omega = std::cos(omega);
   const double sin_omega = std::sin(omega);
@@ -90,7 +90,7 @@ inline BiquadFilter HighPassFilter(double sampling_rate, double frequency,
 }
 
 inline BiquadFilter HighShelfFilter(double sampling_rate, double frequency,
-                                    double q, double gain_db) {
+                                    double gain_db, double q = kDefaultQ) {
   const double omega = 2.0 * M_PI * frequency / sampling_rate;
   const double cos_omega = std::cos(omega);
   const double sin_omega = std::sin(omega);

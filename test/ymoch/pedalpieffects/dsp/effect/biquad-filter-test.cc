@@ -58,7 +58,7 @@ TEST(HighShelfFilter, DoesNotAffectLowFrequencyWaves) {
   constexpr double kFilterFrequencyHz = 500;
 
   BiquadFilter filter =
-      HighShelfFilter(kSamplingRateHz, kFilterFrequencyHz, 0.7, 1.0);
+      HighShelfFilter(kSamplingRateHz, kFilterFrequencyHz, 1.0);
   TestSineWaveAmplitude(filter, kSamplingRateHz, kFrequencyHz, -1.0, 1.0);
 }
 
@@ -69,7 +69,7 @@ TEST(HighShelfFilter, AffectsHighFrequencyWaves) {
   constexpr double kFilterFrequencyHz = 50;
 
   BiquadFilter filter =
-      HighShelfFilter(kSamplingRateHz, kFilterFrequencyHz, 0.7, 20.0);
+      HighShelfFilter(kSamplingRateHz, kFilterFrequencyHz, 20.0);
   TestSineWaveAmplitude(filter, kSamplingRateHz, kFrequencyHz, -1.0, 1.0);
 }
 */

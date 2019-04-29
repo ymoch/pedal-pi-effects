@@ -1,5 +1,3 @@
-#include <algorithm>
-#include <cmath>
 #include <cstdint>
 #include <iostream>
 
@@ -19,13 +17,12 @@ using std::cerr;
 using std::endl;
 using ymoch::pedalpieffects::dsp::type::Signal;
 using ymoch::pedalpieffects::dsp::normalization::Normalizer;
-using ymoch::pedalpieffects::dsp::effect::biquad_filter::kDefaultQ;
-using ymoch::pedalpieffects::dsp::effect::biquad_filter::LowPassFilter;
+using ymoch::pedalpieffects::dsp::effect::biquad_filter::BiquadFilter;
 using ymoch::pedalpieffects::dsp::effect::biquad_filter::HighPassFilter;
 using ymoch::pedalpieffects::dsp::effect::biquad_filter::HighShelfFilter;
 using ymoch::pedalpieffects::dsp::effect::amplification::Amplifier;
 using ymoch::pedalpieffects::dsp::effect::tube_clipping::TubeClipper;
-using ymoch::pedalpieffects::dsp::flow::chain::MakeChain;
+using ymoch::pedalpieffects::dsp::flow::chain::Chain;
 using ymoch::pedalpieffects::dsp::flow::toggle::MakeToggle;
 using ymoch::pedalpieffects::math::constexpr_math::power;
 
@@ -98,30 +95,15 @@ int main(int argc, char** argv) {
   bcm2835_gpio_set_pud(kPinToggleSwitch1, BCM2835_GPIO_PUD_UP);
   bcm2835_gpio_set_pud(kPinFootSwitch1, BCM2835_GPIO_PUD_UP);
 
-  // clang-format off
-  auto pre_low_cut = MakeToggle(
-      HighPassFilter(kClockFrequencyHz, kMinFrequencyHz, kDefaultQ)
-  );
+  auto input_dc_cut =
+      MakeToggle(HighPassFilter(kClockFrequencyHz, kMinFrequencyHz));
+  auto input_high_boost = HighShelfFilter(kClockFrequencyHz, 1500, 12.0);
+
   auto overdrive_gain = Amplifier(1.5);
+  auto overdrive_clip = TubeClipper();
+  auto overdrive_dc_cut = HighPassFilter(kClockFrequencyHz, kMinFrequencyHz);
 
-  auto input_equalize = MakeChain(
-      pre_low_cut,
-      LowPassFilter(kClockFrequencyHz, 15000, kDefaultQ),
-      HighShelfFilter(kClockFrequencyHz, 1500, kDefaultQ, 12.0)
-  );
-  auto overdrive = MakeChain(
-      overdrive_gain,
-      TubeClipper(),
-      HighPassFilter(kClockFrequencyHz, kMinFrequencyHz, kDefaultQ)
-  );
-  const auto master_volume = Amplifier(1.0 / 1.5);
-
-  auto effect = MakeChain(
-      input_equalize,
-      overdrive,
-      master_volume
-  );
-  // clang-format on
+  auto master_volume = Amplifier(1.0 / 1.5);
 
   const Normalizer<uint32_t> normalizer(0, power(2, 12) - 1);
 
@@ -151,14 +133,16 @@ int main(int argc, char** argv) {
       }
 
       uint8_t toggle_switch_1 = bcm2835_gpio_lev(kPinToggleSwitch1);
-      pre_low_cut.enabled(!toggle_switch_1);
+      input_dc_cut.enabled(!toggle_switch_1);
 
       // light the effect when foot switch 1 is activated.
       uint8_t foot_switch_1 = bcm2835_gpio_lev(kPinFootSwitch1);
       bcm2835_gpio_write(kPinLed1, !foot_switch_1);
     }
 
-    Signal signal = effect(normalizer.Normalize(input_signal));
+    Signal signal = Chain(normalizer.Normalize(input_signal), input_dc_cut,
+                          input_high_boost, overdrive_gain, overdrive_clip,
+                          overdrive_dc_cut, master_volume);
 
     // generate output PWM signal 6 bits
     uint32_t output_signal = normalizer.Unnormalize(signal);

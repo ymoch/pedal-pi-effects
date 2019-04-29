@@ -7,33 +7,11 @@
 
 namespace ymoch::pedalpieffects::dsp::flow::chain {
 
-template <typename Head, typename... Tail>
-class Chain {
- public:
-  explicit Chain(const Head& head, const Tail&... tail)
-      : head_(head), tail_chain_(tail...) {}
-
-  type::Signal operator()(type::Signal in) { return tail_chain_(head_(in)); }
-
- private:
-  Head head_;
-  Chain<Tail...> tail_chain_;
-};
-
-template <typename Head>
-class Chain<Head> {
- public:
-  explicit Chain(const Head& head) : head_(head) {}
-
-  type::Signal operator()(type::Signal in) { return head_(in); }
-
- private:
-  Head head_;
-};
+type::Signal Chain(type::Signal in) { return in; }
 
 template <typename Head, typename... Tail>
-Chain<Head, Tail...> MakeChain(const Head& head, const Tail&... tail) {
-  return Chain<Head, Tail...>(head, tail...);
+type::Signal Chain(type::Signal in, Head& head, Tail&... tail) {
+  return Chain(head(in), tail...);
 }
 
 }  // ymoch::pedalpieffects::dsp::flow::chain
