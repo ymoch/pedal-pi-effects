@@ -21,7 +21,7 @@ constexpr double kSamplingRateHz = 44100;
 constexpr double kNumPeriod = 20;
 constexpr double kTolerance = 0.1;
 
-auto CloseTo(double expected) -> decltype(AllOf(Gt(0.0), Lt(0.0))) {
+auto CloseTo(double expected) {
   return AllOf(Gt(expected - kTolerance), Lt(expected + kTolerance));
 }
 
