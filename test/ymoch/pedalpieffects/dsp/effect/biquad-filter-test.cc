@@ -19,7 +19,7 @@ namespace {
 
 constexpr double kSamplingRateHz = 44100;
 constexpr double kNumPeriod = 20;
-constexpr double kTolerance = 0.0001;
+constexpr double kTolerance = 0.1;
 
 auto CloseTo(double expected) -> decltype(AllOf(Gt(0.0), Lt(0.0))) {
   return AllOf(Gt(expected - kTolerance), Lt(expected + kTolerance));
@@ -53,24 +53,22 @@ void TestSineWaveAmplitude(T& filter, double frequency_hz, double expected_min,
 
 }  // annonymous namespace
 
-TEST(LowPassFilter, DoesNotAffectLowFrequencyWaves) {}
-
-TEST(HighShelfFilter, DoesNotAffectLowFrequencyWaves) {
-  constexpr double kFrequencyHz = 50;
-  constexpr double kFilterFrequencyHz = 500;
-
-  BiquadFilter filter =
-      HighShelfFilter(kSamplingRateHz, kFilterFrequencyHz, 1.0);
-  TestSineWaveAmplitude(filter, kFrequencyHz, -1.0, 1.0);
+TEST(LowPassFilter, DoesNotAffectLowFrequencyWaves) {
+  constexpr double kFilterFrequencyHz = 400.0;
+  auto filter = LowPassFilter(kSamplingRateHz, kFilterFrequencyHz);
+  TestSineWaveAmplitude(filter, kFilterFrequencyHz / 16.0, -1.0, 1.0);
 }
 
-TEST(HighShelfFilter, DISABLED_AffectsHighFrequencyWaves) {
-  constexpr double kFrequencyHz = 50;
-  constexpr double kFilterFrequencyHz = 50;
+TEST(HighPassFilter, DoesNotAffectHighFrequencyWaves) {
+  constexpr double kFilterFrequencyHz = 400.0;
+  auto filter = HighPassFilter(kSamplingRateHz, kFilterFrequencyHz);
+  TestSineWaveAmplitude(filter, kFilterFrequencyHz * 16.0, -1.0, 1.0);
+}
 
-  BiquadFilter filter =
-      HighShelfFilter(kSamplingRateHz, kFilterFrequencyHz, 20.0);
-  TestSineWaveAmplitude(filter, kFrequencyHz, -1.0, 1.0);
+TEST(HighShelfFilter, DoesNotAffectLowFrequencyWaves) {
+  constexpr double kFilterFrequencyHz = 400.0;
+  auto filter = HighShelfFilter(kSamplingRateHz, kFilterFrequencyHz, 3.0);
+  TestSineWaveAmplitude(filter, kFilterFrequencyHz / 16.0, -1.0, 1.0);
 }
 
 }  // ymoch::pedalpieffects::dsp::effect::biquad_filter
