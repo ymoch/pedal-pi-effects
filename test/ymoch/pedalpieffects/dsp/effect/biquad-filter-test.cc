@@ -78,9 +78,9 @@ TEST(HighPassFilter, DoesNotAffectHighFrequencyWaves) {
                         CloseTo(1.0));
 }
 
-TEST(LowPassFilter, CutsLowFrequencyWaves) {
+TEST(HighPassFilter, CutsLowFrequencyWaves) {
   constexpr double kFilterFrequencyHz = 400.0;
-  auto filter = HighPassFilter(kSamplingRateHz, kFilterFrequencyHz, 1.0);
+  auto filter = HighPassFilter(kSamplingRateHz, kFilterFrequencyHz);
   TestSineWaveAmplitude(filter, kFilterFrequencyHz / 2.0, CloseTo(-0.2),
                         CloseTo(0.2));
 }
@@ -90,6 +90,13 @@ TEST(HighShelfFilter, DoesNotAffectLowFrequencyWaves) {
   auto filter = HighShelfFilter(kSamplingRateHz, kFilterFrequencyHz, 3.0);
   TestSineWaveAmplitude(filter, kFilterFrequencyHz / 16.0, CloseTo(-1.0),
                         CloseTo(1.0));
+}
+
+TEST(HighShelfFilter, AffectshighFrequencyWaves) {
+  constexpr double kFilterFrequencyHz = 400.0;
+  auto filter = HighShelfFilter(kSamplingRateHz, kFilterFrequencyHz, 3.0);
+  TestSineWaveAmplitude(filter, kFilterFrequencyHz * 8.0, CloseTo(-1.4),
+                        CloseTo(1.4));
 }
 
 }  // ymoch::pedalpieffects::dsp::effect::biquad_filter
