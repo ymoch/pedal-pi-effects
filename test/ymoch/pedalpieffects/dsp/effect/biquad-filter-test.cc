@@ -17,24 +17,25 @@ namespace ymoch::pedalpieffects::dsp::effect::biquad_filter {
 
 namespace {
 
-const double kTolerance = 0.0001;
+constexpr double kSamplingRateHz = 44100;
+constexpr double kNumPeriod = 20;
+constexpr double kTolerance = 0.0001;
 
 auto CloseTo(double expected) -> decltype(AllOf(Gt(0.0), Lt(0.0))) {
   return AllOf(Gt(expected - kTolerance), Lt(expected + kTolerance));
 }
 
 template <typename T>
-void TestSineWaveAmplitude(T& filter, double sampling_rate_hz,
-                           double frequency_hz, double expected_min,
+void TestSineWaveAmplitude(T& filter, double frequency_hz, double expected_min,
                            double expected_max) {
-  auto osc = SineOscillator::OfSampling(sampling_rate_hz, frequency_hz);
+  auto osc = SineOscillator::OfSampling(kSamplingRateHz, frequency_hz);
 
-  const int num_sample = static_cast<int>(sampling_rate_hz) * 10;
   type::Signal raw_min = 0.0;
   type::Signal raw_max = 0.0;
   type::Signal filtered_min = 0.0;
   type::Signal filtered_max = 0.0;
-  for (int i = 0; i < num_sample; ++i) {
+  constexpr int kNumSample = kSamplingRateHz * kNumPeriod;
+  for (int i = 0; i < kNumSample; ++i) {
     const type::Signal raw = osc();
     const type::Signal filtered = filter(raw);
 
@@ -52,26 +53,24 @@ void TestSineWaveAmplitude(T& filter, double sampling_rate_hz,
 
 }  // annonymous namespace
 
+TEST(LowPassFilter, DoesNotAffectLowFrequencyWaves) {}
+
 TEST(HighShelfFilter, DoesNotAffectLowFrequencyWaves) {
-  constexpr double kSamplingRateHz = 2000;
   constexpr double kFrequencyHz = 50;
   constexpr double kFilterFrequencyHz = 500;
 
   BiquadFilter filter =
       HighShelfFilter(kSamplingRateHz, kFilterFrequencyHz, 1.0);
-  TestSineWaveAmplitude(filter, kSamplingRateHz, kFrequencyHz, -1.0, 1.0);
+  TestSineWaveAmplitude(filter, kFrequencyHz, -1.0, 1.0);
 }
 
-/* TODO: Make valid tests.
-TEST(HighShelfFilter, AffectsHighFrequencyWaves) {
-  constexpr double kSamplingRateHz = 10000;
+TEST(HighShelfFilter, DISABLED_AffectsHighFrequencyWaves) {
   constexpr double kFrequencyHz = 50;
   constexpr double kFilterFrequencyHz = 50;
 
   BiquadFilter filter =
       HighShelfFilter(kSamplingRateHz, kFilterFrequencyHz, 20.0);
-  TestSineWaveAmplitude(filter, kSamplingRateHz, kFrequencyHz, -1.0, 1.0);
+  TestSineWaveAmplitude(filter, kFrequencyHz, -1.0, 1.0);
 }
-*/
 
 }  // ymoch::pedalpieffects::dsp::effect::biquad_filter
