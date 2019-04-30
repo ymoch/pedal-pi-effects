@@ -35,6 +35,10 @@ void TestSineWaveAmplitude(T& filter, double frequency_hz, double expected_min,
   type::Signal filtered_min = 0.0;
   type::Signal filtered_max = 0.0;
   constexpr int kNumSample = kSamplingRateHz * kNumPeriod;
+  // Wait the filter is stable.
+  for (int i = 0; i < kNumSample; ++i) {
+    filter(osc());
+  }
   for (int i = 0; i < kNumSample; ++i) {
     const type::Signal raw = osc();
     const type::Signal filtered = filter(raw);
@@ -57,6 +61,12 @@ TEST(LowPassFilter, DoesNotAffectLowFrequencyWaves) {
   constexpr double kFilterFrequencyHz = 400.0;
   auto filter = LowPassFilter(kSamplingRateHz, kFilterFrequencyHz);
   TestSineWaveAmplitude(filter, kFilterFrequencyHz / 16.0, -1.0, 1.0);
+}
+
+TEST(LowPassFilter, DISABLED_CutsHighFrequencyWaves) {
+  constexpr double kFilterFrequencyHz = 400.0;
+  auto filter = LowPassFilter(kSamplingRateHz, kFilterFrequencyHz);
+  TestSineWaveAmplitude(filter, kFilterFrequencyHz * 4.0, -1.0, 1.0);
 }
 
 TEST(HighPassFilter, DoesNotAffectHighFrequencyWaves) {
