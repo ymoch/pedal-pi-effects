@@ -19,10 +19,10 @@ namespace {
 
 constexpr double kSamplingRateHz = 44100;
 constexpr double kNumPeriod = 20;
-constexpr double kTolerance = 0.1;
+constexpr double kDefaultTolerance = 0.1;
 
-auto CloseTo(double expected) {
-  return AllOf(Gt(expected - kTolerance), Lt(expected + kTolerance));
+auto CloseTo(double expected, double tolerance = kDefaultTolerance) {
+  return AllOf(Gt(expected - tolerance), Lt(expected + tolerance));
 }
 
 template <typename T>
