@@ -11,6 +11,7 @@
 #include "dsp/normalization.h"
 #include "dsp/type.h"
 #include "math/constexpr-math.h"
+#include "effect.h"
 
 using std::cout;
 using std::cerr;
@@ -19,12 +20,12 @@ using ymoch::pedalpieffects::dsp::type::Signal;
 using ymoch::pedalpieffects::dsp::normalization::Normalizer;
 using ymoch::pedalpieffects::dsp::effect::biquad_filter::BiquadFilter;
 using ymoch::pedalpieffects::dsp::effect::biquad_filter::HighPassFilter;
-using ymoch::pedalpieffects::dsp::effect::biquad_filter::HighShelfFilter;
 using ymoch::pedalpieffects::dsp::effect::amplification::Amplifier;
 using ymoch::pedalpieffects::dsp::effect::tube_clipping::TubeClipper;
 using ymoch::pedalpieffects::dsp::flow::chain::Chain;
 using ymoch::pedalpieffects::dsp::flow::toggle::MakeToggle;
 using ymoch::pedalpieffects::math::constexpr_math::power;
+using ymoch::pedalpieffects::effect::InputEqualizer;
 
 namespace {
 
@@ -95,9 +96,7 @@ int main(int argc, char** argv) {
   bcm2835_gpio_set_pud(kPinToggleSwitch1, BCM2835_GPIO_PUD_UP);
   bcm2835_gpio_set_pud(kPinFootSwitch1, BCM2835_GPIO_PUD_UP);
 
-  auto input_dc_cut =
-      MakeToggle(HighPassFilter(kClockFrequencyHz, kMinFrequencyHz));
-  auto input_high_boost = HighShelfFilter(kClockFrequencyHz, 1500, 12.0);
+  auto input_equalizer = MakeToggle(InputEqualizer(kClockFrequencyHz));
 
   auto overdrive_gain = Amplifier(1.5);
   auto overdrive_clip = TubeClipper();
@@ -133,15 +132,15 @@ int main(int argc, char** argv) {
       }
 
       uint8_t toggle_switch_1 = bcm2835_gpio_lev(kPinToggleSwitch1);
-      input_dc_cut.enabled(!toggle_switch_1);
+      input_equalizer.enabled(!toggle_switch_1);
 
       // light the effect when foot switch 1 is activated.
       uint8_t foot_switch_1 = bcm2835_gpio_lev(kPinFootSwitch1);
       bcm2835_gpio_write(kPinLed1, !foot_switch_1);
     }
 
-    Signal signal = Chain(normalizer.Normalize(input_signal), input_dc_cut,
-                          input_high_boost, overdrive_gain, overdrive_clip,
+    Signal signal = Chain(normalizer.Normalize(input_signal), input_equalizer,
+                          overdrive_gain, overdrive_clip,
                           overdrive_dc_cut, master_volume);
 
     // generate output PWM signal 6 bits

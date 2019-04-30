@@ -7,10 +7,10 @@
 
 namespace ymoch::pedalpieffects::dsp::flow::chain {
 
-type::Signal Chain(type::Signal in) { return in; }
+inline type::Signal Chain(type::Signal in) { return in; }
 
 template <typename Head, typename... Tail>
-type::Signal Chain(type::Signal in, Head& head, Tail&... tail) {
+inline type::Signal Chain(type::Signal in, Head& head, Tail&... tail) {
   return Chain(head(in), tail...);
 }
 
