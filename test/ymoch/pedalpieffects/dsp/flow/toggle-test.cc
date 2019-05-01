@@ -35,7 +35,7 @@ TEST(Toggle, ProcessesSignalsWhenEnabled) {
 }
 
 TEST(Toggle, CallFunctorEvenWhenDisabled) {
-  auto functor = testing::MockFunction<Signal(Signal signal)>();
+  testing::MockFunction<Signal(Signal signal)> functor;
   EXPECT_CALL(functor, Call(_)).WillOnce(Return(1.0));
 
   auto toggle = MakeToggle(functor.AsStdFunction(), false);

@@ -112,7 +112,7 @@ int main(int argc, char** argv) {
     bcm2835_spi_transfernb(mosi, miso, 3);
     uint32_t input_signal = miso[2] + ((miso[1] & 0x0F) << 8);
 
-    // Read the controls every 50000 times (0.25s) to save resources.
+    // Read the controls every 0.25s to save resources.
     constexpr uint32_t kControlCheckInterval = kClockFrequencyHz * 0.25;
     if (read_timer % kControlCheckInterval == 0) {
       constexpr double kGainFactorDelta = 1.5;
