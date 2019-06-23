@@ -7,18 +7,19 @@
 #include "dsp/effect/biquad-filter.h"
 #include "dsp/effect/tube-clipping.h"
 #include "dsp/flow/chain.h"
+#include "dsp/flow/split.h"
 #include "dsp/flow/toggle.h"
 #include "dsp/normalization.h"
 #include "dsp/type.h"
-#include "math/constexpr-math.h"
 #include "effect.h"
+#include "math/constexpr-math.h"
 
 using std::cout;
 using std::cerr;
 using std::endl;
+
 using ymoch::pedalpieffects::dsp::type::Signal;
 using ymoch::pedalpieffects::dsp::normalization::Normalizer;
-using ymoch::pedalpieffects::dsp::effect::biquad_filter::BiquadFilter;
 using ymoch::pedalpieffects::dsp::effect::biquad_filter::HighPassFilter;
 using ymoch::pedalpieffects::dsp::effect::amplification::Amplifier;
 using ymoch::pedalpieffects::dsp::effect::tube_clipping::TubeClipper;
@@ -26,6 +27,9 @@ using ymoch::pedalpieffects::dsp::flow::chain::Chain;
 using ymoch::pedalpieffects::dsp::flow::toggle::MakeToggle;
 using ymoch::pedalpieffects::math::constexpr_math::power;
 using ymoch::pedalpieffects::effect::InputEqualizer;
+using ymoch::pedalpieffects::effect::LowFrequencyDriver;
+using ymoch::pedalpieffects::effect::HighFrequencyDriver;
+using ymoch::pedalpieffects::effect::XoverDriver;
 
 namespace {
 
@@ -98,6 +102,9 @@ int main(int argc, char** argv) {
 
   auto input_equalizer = MakeToggle(InputEqualizer(kClockFrequencyHz));
 
+  auto xover_drive = XoverDriver(LowFrequencyDriver(kClockFrequencyHz),
+                                 HighFrequencyDriver(kClockFrequencyHz));
+
   auto overdrive_gain = Amplifier(1.5);
   auto overdrive_clip = TubeClipper();
   auto overdrive_dc_cut = HighPassFilter(kClockFrequencyHz, kMinFrequencyHz);
@@ -110,7 +117,7 @@ int main(int argc, char** argv) {
   for (uint32_t read_timer = 0;; ++read_timer) {
     // read 12 bits ADC
     bcm2835_spi_transfernb(mosi, miso, 3);
-    uint32_t input_signal = miso[2] + ((miso[1] & 0x0F) << 8);
+    const uint32_t input_signal = miso[2] + ((miso[1] & 0x0F) << 8);
 
     // Read the controls every 0.25s to save resources.
     constexpr uint32_t kControlCheckInterval = kClockFrequencyHz * 0.25;
@@ -139,12 +146,12 @@ int main(int argc, char** argv) {
       bcm2835_gpio_write(kPinLed1, !foot_switch_1);
     }
 
-    Signal signal = Chain(normalizer.Normalize(input_signal), input_equalizer,
-                          overdrive_gain, overdrive_clip,
-                          overdrive_dc_cut, master_volume);
+    const Signal signal =
+        Chain(normalizer.Normalize(input_signal), input_equalizer, xover_drive,
+              overdrive_gain, overdrive_clip, overdrive_dc_cut, master_volume);
 
     // generate output PWM signal 6 bits
-    uint32_t output_signal = normalizer.Unnormalize(signal);
+    const uint32_t output_signal = normalizer.Unnormalize(signal);
     bcm2835_pwm_set_data(1, output_signal & 0x3F);
     bcm2835_pwm_set_data(0, output_signal >> 6);
   }
