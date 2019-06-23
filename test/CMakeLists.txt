@@ -15,6 +15,7 @@ add_executable(
   ymoch/pedalpieffects/dsp/effect/biquad-filter-test.cc
   ymoch/pedalpieffects/dsp/effect/tube-clipping-test.cc
   ymoch/pedalpieffects/dsp/flow/chain-test.cc
+  ymoch/pedalpieffects/dsp/flow/split-test.cc
   ymoch/pedalpieffects/dsp/flow/toggle-test.cc
   ymoch/pedalpieffects/math/constexpr-math-test.cc
 )
