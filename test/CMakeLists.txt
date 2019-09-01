@@ -9,6 +9,7 @@ include_directories(
 
 add_executable(
   pedal-pi-effects-test
+  ../src/ymoch/pedalpieffects/dsp/effect/biquad-filter.cc
   ymoch/pedalpieffects/dsp/normalization-test.cc
   ymoch/pedalpieffects/dsp/oscillation-test.cc
   ymoch/pedalpieffects/dsp/effect/amplification-test.cc

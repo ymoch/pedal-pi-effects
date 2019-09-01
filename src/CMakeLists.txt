@@ -7,6 +7,7 @@ include_directories(.)
 add_executable(
   pedal-pi-effects
   ymoch/pedalpieffects/dsp/type.cc
+  ymoch/pedalpieffects/dsp/effect/biquad-filter.cc
   ymoch/pedalpieffects/effect.cc
   ymoch/pedalpieffects/main.cc
 )
