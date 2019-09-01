@@ -16,9 +16,7 @@ using std::cout;
 using std::cerr;
 using std::endl;
 
-using ymoch::pedalpieffects::dsp::type::Signal;
 using ymoch::pedalpieffects::dsp::normalization::Normalizer;
-using ymoch::pedalpieffects::dsp::effect::biquad_filter::HighPassFilter;
 using ymoch::pedalpieffects::dsp::effect::tube_clipping::TubeClipper;
 using ymoch::pedalpieffects::dsp::flow::chain::Chain;
 using ymoch::pedalpieffects::dsp::flow::toggle::MakeToggle;
@@ -45,8 +43,6 @@ constexpr uint8_t kPinPush2 = RPI_V2_GPIO_P1_38;
 constexpr uint8_t kPinToggleSwitch1 = RPI_V2_GPIO_P1_32;
 constexpr uint8_t kPinFootSwitch1 = RPI_GPIO_P1_10;
 constexpr uint8_t kPinLed1 = RPI_V2_GPIO_P1_36;
-
-constexpr double kMinFrequencyHz = 5.0;
 
 }  // anonymous namespace
 
@@ -101,7 +97,6 @@ int main(int argc, char** argv) {
   auto& gain = effect.gain();
 
   auto overdrive_clip = TubeClipper();
-  auto overdrive_dc_cut = HighPassFilter(kClockFrequencyHz, kMinFrequencyHz);
 
   const Normalizer<uint32_t> normalizer(0, power(2, 12) - 1);
 
@@ -138,9 +133,8 @@ int main(int argc, char** argv) {
       bcm2835_gpio_write(kPinLed1, !foot_switch_1);
     }
 
-    const Signal signal =
-        Chain(normalizer.Normalize(input_signal), input_equalizer, effect,
-              overdrive_clip, overdrive_dc_cut);
+    const auto signal = Chain(normalizer.Normalize(input_signal),
+                              input_equalizer, effect, overdrive_clip);
 
     // generate output PWM signal 6 bits
     const uint32_t output_signal = normalizer.Unnormalize(signal);

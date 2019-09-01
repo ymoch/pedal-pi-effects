@@ -62,7 +62,7 @@ class XoverDriver {
   HighFrequencyDriver high_;
 };
 
-BiquadFilter DcCut(double sampling_rate_hz) {
+inline BiquadFilter DcCut(double sampling_rate_hz) {
   return HighPassFilter(sampling_rate_hz, kMinFrequencyHz);
 }
 
@@ -94,6 +94,7 @@ class Effector::Impl {
       : gain_(1.5),
         xover_driver_(LowFrequencyDriver(sampling_rate_hz, kLowXoverHz),
                       HighFrequencyDriver(sampling_rate_hz, kHighXoverHz)),
+        dc_cut_(DcCut(sampling_rate_hz)),
         master_volume_(1.0 / 1.5) {}
 
   Amplifier& gain() { return gain_; }
@@ -106,6 +107,7 @@ class Effector::Impl {
  private:
   Amplifier gain_;
   XoverDriver xover_driver_;
+  BiquadFilter dc_cut_;
   const Amplifier master_volume_;
 };
 
