@@ -13,14 +13,13 @@ namespace ymoch::pedalpieffects::effect {
 class InputEqualizer {
  public:
   explicit InputEqualizer(double sampling_rate_hz);
-
-  dsp::type::Signal operator()(dsp::type::Signal in) {
-    return dsp::flow::chain::Chain(in, dc_cut_, high_boost_);
-  }
+  InputEqualizer(InputEqualizer&& other);
+  ~InputEqualizer();
+  dsp::type::Signal operator()(dsp::type::Signal in);
 
  private:
-  dsp::effect::biquad_filter::BiquadFilter dc_cut_;
-  dsp::effect::biquad_filter::BiquadFilter high_boost_;
+  class Impl;
+  std::unique_ptr<Impl> impl_;
 };
 
 class LowFrequencyDriver {
