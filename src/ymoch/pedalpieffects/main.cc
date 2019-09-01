@@ -3,8 +3,6 @@
 
 #include <bcm2835.h>
 
-#include "dsp/effect/biquad-filter.h"
-#include "dsp/effect/tube-clipping.h"
 #include "dsp/flow/chain.h"
 #include "dsp/flow/toggle.h"
 #include "dsp/normalization.h"
@@ -17,7 +15,6 @@ using std::cerr;
 using std::endl;
 
 using ymoch::pedalpieffects::dsp::normalization::Normalizer;
-using ymoch::pedalpieffects::dsp::effect::tube_clipping::TubeClipper;
 using ymoch::pedalpieffects::dsp::flow::chain::Chain;
 using ymoch::pedalpieffects::dsp::flow::toggle::MakeToggle;
 using ymoch::pedalpieffects::math::constexpr_math::power;
@@ -91,14 +88,10 @@ int main(int argc, char** argv) {
   bcm2835_gpio_set_pud(kPinToggleSwitch1, BCM2835_GPIO_PUD_UP);
   bcm2835_gpio_set_pud(kPinFootSwitch1, BCM2835_GPIO_PUD_UP);
 
+  const Normalizer<uint32_t> normalizer(0, power(2, 12) - 1);
   auto input_equalizer = MakeToggle(InputEqualizer(kClockFrequencyHz));
-
   auto effect = Effector(kClockFrequencyHz);
   auto& gain = effect.gain();
-
-  auto overdrive_clip = TubeClipper();
-
-  const Normalizer<uint32_t> normalizer(0, power(2, 12) - 1);
 
   // Main Loop
   for (uint32_t read_timer = 0;; ++read_timer) {
@@ -133,8 +126,8 @@ int main(int argc, char** argv) {
       bcm2835_gpio_write(kPinLed1, !foot_switch_1);
     }
 
-    const auto signal = Chain(normalizer.Normalize(input_signal),
-                              input_equalizer, effect, overdrive_clip);
+    const auto signal =
+        Chain(normalizer.Normalize(input_signal), input_equalizer, effect);
 
     // generate output PWM signal 6 bits
     const uint32_t output_signal = normalizer.Unnormalize(signal);

@@ -2,6 +2,7 @@
 
 #include "dsp/effect/amplification.h"
 #include "dsp/effect/biquad-filter.h"
+#include "dsp/effect/tube-clipping.h"
 #include "dsp/flow/chain.h"
 #include "dsp/flow/split.h"
 
@@ -12,6 +13,7 @@ using dsp::effect::biquad_filter::BiquadFilter;
 using dsp::effect::biquad_filter::HighPassFilter;
 using dsp::effect::biquad_filter::HighShelfFilter;
 using dsp::effect::biquad_filter::LowPassFilter;
+using dsp::effect::tube_clipping::TubeClipper;
 using dsp::flow::chain::Chain;
 using dsp::flow::split::SplitMix;
 using dsp::type::Signal;
@@ -38,14 +40,20 @@ class LowFrequencyDriver {
 class HighFrequencyDriver {
  public:
   HighFrequencyDriver(double sampling_rate_hz, double xover_hz)
-      : xover_(HighPassFilter(sampling_rate_hz, xover_hz)) {}
+      : xover_(HighPassFilter(sampling_rate_hz, xover_hz)),
+        gain_(1000.0),
+        clip_(),
+        volume_(1.0 / 1000.0) {}
 
   Signal operator()(Signal in) {
-    return Chain(in, xover_);
+    return Chain(in, xover_, gain_, clip_, volume_);
   }
 
  private:
   BiquadFilter xover_;
+  const Amplifier gain_;
+  const TubeClipper clip_;
+  const Amplifier volume_;
 };
 
 class XoverDriver {
