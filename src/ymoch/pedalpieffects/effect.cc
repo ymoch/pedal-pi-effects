@@ -13,6 +13,7 @@ using dsp::effect::biquad_filter::HighPassFilter;
 using dsp::effect::biquad_filter::HighShelfFilter;
 using dsp::effect::biquad_filter::LowPassFilter;
 using dsp::flow::chain::Chain;
+using dsp::flow::split::SplitMix;
 using dsp::type::Signal;
 
 namespace {
@@ -24,27 +25,27 @@ constexpr double kHighXoverHz = 640.0;
 class LowFrequencyDriver {
  public:
   LowFrequencyDriver(double sampling_rate_hz, double xover_hz)
-    : xover_(LowPassFilter(sampling_rate_hz, xover_hz)) {}
+      : xover_(LowPassFilter(sampling_rate_hz, xover_hz)) {}
 
-  dsp::type::Signal operator()(dsp::type::Signal in) {
-    return dsp::flow::chain::Chain(in, xover_);
+  Signal operator()(Signal in) {
+    return Chain(in, xover_);
   }
 
  private:
-  dsp::effect::biquad_filter::BiquadFilter xover_;
+  BiquadFilter xover_;
 };
 
 class HighFrequencyDriver {
  public:
-  explicit HighFrequencyDriver(double sampling_rate_hz)
-    : xover_(HighPassFilter(sampling_rate_hz, kHighXoverHz)) {}
+  HighFrequencyDriver(double sampling_rate_hz, double xover_hz)
+      : xover_(HighPassFilter(sampling_rate_hz, xover_hz)) {}
 
-  dsp::type::Signal operator()(dsp::type::Signal in) {
-    return dsp::flow::chain::Chain(in, xover_);
+  Signal operator()(Signal in) {
+    return Chain(in, xover_);
   }
 
  private:
-  dsp::effect::biquad_filter::BiquadFilter xover_;
+  BiquadFilter xover_;
 };
 
 class XoverDriver {
@@ -52,8 +53,8 @@ class XoverDriver {
   explicit XoverDriver(LowFrequencyDriver&& low, HighFrequencyDriver&& high)
       : low_(std::move(low)), high_(std::move(high)) {}
 
-  dsp::type::Signal operator()(dsp::type::Signal in) {
-    return dsp::flow::split::SplitMix(in, low_, high_);
+  Signal operator()(Signal in) {
+    return SplitMix(in, low_, high_);
   }
 
  private:
@@ -70,12 +71,10 @@ BiquadFilter DcCut(double sampling_rate_hz) {
 class InputEqualizer::Impl {
  public:
   explicit Impl(double sampling_rate_hz)
-    : dc_cut_(DcCut(sampling_rate_hz)),
-      high_boost_(HighShelfFilter(sampling_rate_hz, 1500, 12.0)) {}
+      : dc_cut_(DcCut(sampling_rate_hz)),
+        high_boost_(HighShelfFilter(sampling_rate_hz, 1500, 12.0)) {}
 
-  Signal operator()(Signal in) {
-    return Chain(in, dc_cut_, high_boost_);
-  }
+  Signal operator()(Signal in) { return Chain(in, dc_cut_, high_boost_); }
 
  private:
   BiquadFilter dc_cut_;
@@ -87,16 +86,14 @@ InputEqualizer::InputEqualizer(double sampling_rate_hz)
 InputEqualizer::InputEqualizer(InputEqualizer&& other)
     : impl_(std::move(other.impl_)) {}
 InputEqualizer::~InputEqualizer() = default;
-Signal InputEqualizer::operator()(Signal in) {
-  return (*impl_)(in);
-}
+Signal InputEqualizer::operator()(Signal in) { return (*impl_)(in); }
 
 class Effector::Impl {
  public:
   explicit Impl(double sampling_rate_hz)
       : gain_(1.5),
         xover_driver_(LowFrequencyDriver(sampling_rate_hz, kLowXoverHz),
-                      HighFrequencyDriver(sampling_rate_hz)),
+                      HighFrequencyDriver(sampling_rate_hz, kHighXoverHz)),
         master_volume_(1.0 / 1.5) {}
 
   Amplifier& gain() { return gain_; }
@@ -115,14 +112,8 @@ class Effector::Impl {
 Effector::Effector(double sampling_rate_hz)
     : impl_(new Impl(sampling_rate_hz)) {}
 Effector::~Effector() = default;
-Amplifier& Effector::gain() {
-  return impl_->gain();
-}
-const Amplifier& Effector::gain() const {
-  return impl_->gain();
-}
-Signal Effector::operator()(Signal in) {
-  return (*impl_)(in);
-}
+Amplifier& Effector::gain() { return impl_->gain(); }
+const Amplifier& Effector::gain() const { return impl_->gain(); }
+Signal Effector::operator()(Signal in) { return (*impl_)(in); }
 
 }  // ymoch::pedalpieffects::effect
