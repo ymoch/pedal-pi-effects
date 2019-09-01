@@ -27,9 +27,7 @@ using ymoch::pedalpieffects::dsp::flow::chain::Chain;
 using ymoch::pedalpieffects::dsp::flow::toggle::MakeToggle;
 using ymoch::pedalpieffects::math::constexpr_math::power;
 using ymoch::pedalpieffects::effect::InputEqualizer;
-using ymoch::pedalpieffects::effect::LowFrequencyDriver;
-using ymoch::pedalpieffects::effect::HighFrequencyDriver;
-using ymoch::pedalpieffects::effect::XoverDriver;
+using ymoch::pedalpieffects::effect::Effector;
 
 namespace {
 
@@ -102,8 +100,7 @@ int main(int argc, char** argv) {
 
   auto input_equalizer = MakeToggle(InputEqualizer(kClockFrequencyHz));
 
-  auto xover_drive = XoverDriver(LowFrequencyDriver(kClockFrequencyHz),
-                                 HighFrequencyDriver(kClockFrequencyHz));
+  auto effect = Effector(kClockFrequencyHz);
 
   auto overdrive_gain = Amplifier(1.5);
   auto overdrive_clip = TubeClipper();
@@ -147,7 +144,7 @@ int main(int argc, char** argv) {
     }
 
     const Signal signal =
-        Chain(normalizer.Normalize(input_signal), input_equalizer, xover_drive,
+        Chain(normalizer.Normalize(input_signal), input_equalizer, effect,
               overdrive_gain, overdrive_clip, overdrive_dc_cut, master_volume);
 
     // generate output PWM signal 6 bits

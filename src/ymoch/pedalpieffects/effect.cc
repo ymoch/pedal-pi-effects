@@ -1,11 +1,12 @@
 #include "effect.h"
 
-using ymoch::pedalpieffects::dsp::effect::biquad_filter::BiquadFilter;
-using ymoch::pedalpieffects::dsp::effect::biquad_filter::HighPassFilter;
-using ymoch::pedalpieffects::dsp::effect::biquad_filter::HighShelfFilter;
-using ymoch::pedalpieffects::dsp::effect::biquad_filter::LowPassFilter;
-
 namespace ymoch::pedalpieffects::effect {
+
+using dsp::effect::biquad_filter::BiquadFilter;
+using dsp::effect::biquad_filter::HighPassFilter;
+using dsp::effect::biquad_filter::HighShelfFilter;
+using dsp::effect::biquad_filter::LowPassFilter;
+using dsp::type::Signal;
 
 namespace {
 
@@ -26,5 +27,22 @@ LowFrequencyDriver::LowFrequencyDriver(double sampling_rate_hz)
 
 HighFrequencyDriver::HighFrequencyDriver(double sampling_rate_hz)
     : xover_(HighPassFilter(sampling_rate_hz, 640)) {}
+
+class Effector::Impl {
+ public:
+  explicit Impl(double sampling_rate_hz)
+      : xover_driver_(LowFrequencyDriver(sampling_rate_hz),
+                      HighFrequencyDriver(sampling_rate_hz)) {}
+
+  Signal operator()(Signal in) { return xover_driver_(in); }
+
+ private:
+  XoverDriver xover_driver_;
+};
+
+Effector::Effector(double sampling_rate_hz)
+    : impl_(new Impl(sampling_rate_hz)) {}
+Effector::~Effector() = default;
+Signal Effector::operator()(Signal in) { return (*impl_)(in); }
 
 }  // ymoch::pedalpieffects::effect

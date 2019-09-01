@@ -1,6 +1,8 @@
 #ifndef YMOCH_PEDALPIEFFECTS_EFFECT_H_
 #define YMOCH_PEDALPIEFFECTS_EFFECT_H_
 
+#include <memory>
+
 #include "dsp/effect/biquad-filter.h"
 #include "dsp/flow/chain.h"
 #include "dsp/flow/split.h"
@@ -57,6 +59,18 @@ class XoverDriver {
  private:
   LowFrequencyDriver low_;
   HighFrequencyDriver high_;
+};
+
+class Effector {
+ public:
+  explicit Effector(double sampling_rate_hz);
+  ~Effector();
+
+  dsp::type::Signal operator()(dsp::type::Signal in);
+
+ private:
+  class Impl;
+  std::unique_ptr<Impl> impl_;
 };
 
 }  // ymoch::pedalpieffects::effect
