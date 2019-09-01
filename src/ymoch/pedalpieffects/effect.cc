@@ -96,15 +96,20 @@ HighFrequencyDriver::HighFrequencyDriver(double sampling_rate_hz)
 class Effector::Impl {
  public:
   explicit Impl(double sampling_rate_hz)
-      : xover_driver_(LowFrequencyDriver(sampling_rate_hz),
+      : gain_(),
+        xover_driver_(LowFrequencyDriver(sampling_rate_hz),
                       HighFrequencyDriver(sampling_rate_hz)),
         master_volume_(1.0 / 1.5) {}
+
+  Amplifier& gain() { return gain_; }
+  const Amplifier& gain() const { return gain_; }
 
   Signal operator()(Signal in) {
     return Chain(in, xover_driver_, master_volume_);
   }
 
  private:
+  Amplifier gain_;
   XoverDriver xover_driver_;
   const Amplifier master_volume_;
 };
@@ -112,6 +117,14 @@ class Effector::Impl {
 Effector::Effector(double sampling_rate_hz)
     : impl_(new Impl(sampling_rate_hz)) {}
 Effector::~Effector() = default;
-Signal Effector::operator()(Signal in) { return (*impl_)(in); }
+Amplifier& Effector::gain() {
+  return impl_->gain();
+}
+const Amplifier& Effector::gain() const {
+  return impl_->gain();
+}
+Signal Effector::operator()(Signal in) {
+  return (*impl_)(in);
+}
 
 }  // ymoch::pedalpieffects::effect

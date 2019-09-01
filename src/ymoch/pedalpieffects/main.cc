@@ -3,11 +3,9 @@
 
 #include <bcm2835.h>
 
-#include "dsp/effect/amplification.h"
 #include "dsp/effect/biquad-filter.h"
 #include "dsp/effect/tube-clipping.h"
 #include "dsp/flow/chain.h"
-#include "dsp/flow/split.h"
 #include "dsp/flow/toggle.h"
 #include "dsp/normalization.h"
 #include "dsp/type.h"
@@ -21,7 +19,6 @@ using std::endl;
 using ymoch::pedalpieffects::dsp::type::Signal;
 using ymoch::pedalpieffects::dsp::normalization::Normalizer;
 using ymoch::pedalpieffects::dsp::effect::biquad_filter::HighPassFilter;
-using ymoch::pedalpieffects::dsp::effect::amplification::Amplifier;
 using ymoch::pedalpieffects::dsp::effect::tube_clipping::TubeClipper;
 using ymoch::pedalpieffects::dsp::flow::chain::Chain;
 using ymoch::pedalpieffects::dsp::flow::toggle::MakeToggle;
@@ -101,8 +98,8 @@ int main(int argc, char** argv) {
   auto input_equalizer = MakeToggle(InputEqualizer(kClockFrequencyHz));
 
   auto effect = Effector(kClockFrequencyHz);
+  auto& gain = effect.gain();
 
-  auto overdrive_gain = Amplifier(1.5);
   auto overdrive_clip = TubeClipper();
   auto overdrive_dc_cut = HighPassFilter(kClockFrequencyHz, kMinFrequencyHz);
 
@@ -122,15 +119,15 @@ int main(int argc, char** argv) {
       uint8_t push_1 = bcm2835_gpio_lev(kPinPush1);
       if (!push_1) {
         bcm2835_delay(100);  // 100ms delay for buttons debouncing.
-        overdrive_gain.factor(overdrive_gain.factor() / kGainFactorDelta);
-        cout << "Gain: " << overdrive_gain.factor() << endl;
+        gain.factor(gain.factor() / kGainFactorDelta);
+        cout << "Gain: " << gain.factor() << endl;
       }
 
       uint8_t push_2 = bcm2835_gpio_lev(kPinPush2);
       if (!push_2) {
         bcm2835_delay(100);  // 100ms delay for buttons debouncing.
-        overdrive_gain.factor(overdrive_gain.factor() * kGainFactorDelta);
-        cout << "Gain: " << overdrive_gain.factor() << endl;
+        gain.factor(gain.factor() * kGainFactorDelta);
+        cout << "Gain: " << gain.factor() << endl;
       }
 
       uint8_t toggle_switch_1 = bcm2835_gpio_lev(kPinToggleSwitch1);
@@ -143,7 +140,7 @@ int main(int argc, char** argv) {
 
     const Signal signal =
         Chain(normalizer.Normalize(input_signal), input_equalizer, effect,
-              overdrive_gain, overdrive_clip, overdrive_dc_cut);
+              overdrive_clip, overdrive_dc_cut);
 
     // generate output PWM signal 6 bits
     const uint32_t output_signal = normalizer.Unnormalize(signal);
