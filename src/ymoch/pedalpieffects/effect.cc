@@ -1,11 +1,13 @@
 #include "effect.h"
 
+#include "dsp/effect/amplification.h"
 #include "dsp/effect/biquad-filter.h"
 #include "dsp/flow/chain.h"
 #include "dsp/flow/split.h"
 
 namespace ymoch::pedalpieffects::effect {
 
+using dsp::effect::amplification::Amplifier;
 using dsp::effect::biquad_filter::BiquadFilter;
 using dsp::effect::biquad_filter::HighPassFilter;
 using dsp::effect::biquad_filter::HighShelfFilter;
@@ -95,12 +97,16 @@ class Effector::Impl {
  public:
   explicit Impl(double sampling_rate_hz)
       : xover_driver_(LowFrequencyDriver(sampling_rate_hz),
-                      HighFrequencyDriver(sampling_rate_hz)) {}
+                      HighFrequencyDriver(sampling_rate_hz)),
+        master_volume_(1.0 / 1.5) {}
 
-  Signal operator()(Signal in) { return xover_driver_(in); }
+  Signal operator()(Signal in) {
+    return Chain(in, xover_driver_, master_volume_);
+  }
 
  private:
   XoverDriver xover_driver_;
+  const Amplifier master_volume_;
 };
 
 Effector::Effector(double sampling_rate_hz)

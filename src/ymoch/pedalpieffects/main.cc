@@ -106,8 +106,6 @@ int main(int argc, char** argv) {
   auto overdrive_clip = TubeClipper();
   auto overdrive_dc_cut = HighPassFilter(kClockFrequencyHz, kMinFrequencyHz);
 
-  auto master_volume = Amplifier(1.0 / 1.5);
-
   const Normalizer<uint32_t> normalizer(0, power(2, 12) - 1);
 
   // Main Loop
@@ -145,7 +143,7 @@ int main(int argc, char** argv) {
 
     const Signal signal =
         Chain(normalizer.Normalize(input_signal), input_equalizer, effect,
-              overdrive_gain, overdrive_clip, overdrive_dc_cut, master_volume);
+              overdrive_gain, overdrive_clip, overdrive_dc_cut);
 
     // generate output PWM signal 6 bits
     const uint32_t output_signal = normalizer.Unnormalize(signal);
