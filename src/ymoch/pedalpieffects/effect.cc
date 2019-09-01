@@ -1,6 +1,8 @@
 #include "effect.h"
 
+#include "dsp/effect/biquad-filter.h"
 #include "dsp/flow/chain.h"
+#include "dsp/flow/split.h"
 
 namespace ymoch::pedalpieffects::effect {
 
@@ -14,6 +16,44 @@ using dsp::type::Signal;
 namespace {
 
 constexpr double kMinFrequencyHz = 5.0;
+
+class LowFrequencyDriver {
+ public:
+  explicit LowFrequencyDriver(double sampling_rate_hz);
+
+  dsp::type::Signal operator()(dsp::type::Signal in) {
+    return dsp::flow::chain::Chain(in, xover_);
+  }
+
+ private:
+  dsp::effect::biquad_filter::BiquadFilter xover_;
+};
+
+class HighFrequencyDriver {
+ public:
+  explicit HighFrequencyDriver(double sampling_rate_hz);
+
+  dsp::type::Signal operator()(dsp::type::Signal in) {
+    return dsp::flow::chain::Chain(in, xover_);
+  }
+
+ private:
+  dsp::effect::biquad_filter::BiquadFilter xover_;
+};
+
+class XoverDriver {
+ public:
+  explicit XoverDriver(LowFrequencyDriver&& low, HighFrequencyDriver&& high)
+      : low_(std::move(low)), high_(std::move(high)) {}
+
+  dsp::type::Signal operator()(dsp::type::Signal in) {
+    return dsp::flow::split::SplitMix(in, low_, high_);
+  }
+
+ private:
+  LowFrequencyDriver low_;
+  HighFrequencyDriver high_;
+};
 
 BiquadFilter DcCut(double sampling_rate_hz) {
   return HighPassFilter(sampling_rate_hz, kMinFrequencyHz);
