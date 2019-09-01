@@ -48,7 +48,7 @@ class HighFrequencyDriver {
 class XoverDriver {
  public:
   explicit XoverDriver(LowFrequencyDriver&& low, HighFrequencyDriver&& high)
-      : low_(low), high_(high) {}
+      : low_(std::move(low)), high_(std::move(high)) {}
 
   dsp::type::Signal operator()(dsp::type::Signal in) {
     return dsp::flow::split::SplitMix(in, low_, high_);

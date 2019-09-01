@@ -11,7 +11,7 @@ template <typename T>
 class Toggle {
  public:
   explicit Toggle(T&& effect, bool enabled = false)
-      : effect_(effect), enabled_(enabled) {}
+      : effect_(std::move(effect)), enabled_(enabled) {}
 
   bool enabled() const { return enabled_; }
 

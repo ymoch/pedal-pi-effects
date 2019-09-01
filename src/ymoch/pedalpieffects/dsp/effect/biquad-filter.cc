@@ -6,34 +6,57 @@ namespace ymoch::pedalpieffects::dsp::effect::biquad_filter {
 
 using type::Signal;
 
-BiquadFilter::BiquadFilter(double a1, double a2, double b0, double b1,
-                           double b2)
-    : a1_(a1),
-      a2_(a2),
-      b0_(b0),
-      b1_(b1),
-      b2_(b2),
-      in1_(0.0),
-      in2_(0.0),
-      out1_(0.0),
-      out2_(0.0) {}
+class BiquadFilter::Impl {
+ public:
+  Impl(double a1, double a2, double b0, double b1, double b2)
+      : a1_(a1),
+        a2_(a2),
+        b0_(b0),
+        b1_(b1),
+        b2_(b2),
+        in1_(0.0),
+        in2_(0.0),
+        out1_(0.0),
+        out2_(0.0) {}
 
-BiquadFilter::BiquadFilter(double a0, double a1, double a2, double b0,
-                           double b1, double b2)
-    // When given a0, normalize coefficients by a0.
-    : BiquadFilter(a1 / a0, a2 / a0, b0 / a0, b1 / a0, b2 / a0) {}
+  Impl(double a0, double a1, double a2, double b0, double b1, double b2)
+      // When given a0, normalize coefficients by a0.
+      : Impl(a1 / a0, a2 / a0, b0 / a0, b1 / a0, b2 / a0) {}
 
-Signal BiquadFilter::operator()(Signal in) {
-  // See: https://en.wikipedia.org/wiki/Digital_biquad_filter#Direct_form_1
-  const Signal out =
-      b0_ * in + b1_ * in1_ + b2_ * in2_ - a1_ * out1_ - a2_ * out2_;
+  Signal operator()(Signal in) {
+    // See: https://en.wikipedia.org/wiki/Digital_biquad_filter#Direct_form_1
+    const Signal out =
+        b0_ * in + b1_ * in1_ + b2_ * in2_ - a1_ * out1_ - a2_ * out2_;
 
-  in2_ = in1_;
-  in1_ = in;
-  out2_ = out1_;
-  out1_ = out;
+    in2_ = in1_;
+    in1_ = in;
+    out2_ = out1_;
+    out1_ = out;
 
-  return out;
+    return out;
+  }
+
+ private:
+  const double a1_;
+  const double a2_;
+  const double b0_;
+  const double b1_;
+  const double b2_;
+  type::Signal in1_;
+  type::Signal in2_;
+  type::Signal out1_;
+  type::Signal out2_;
+};
+
+BiquadFilter::BiquadFilter(double a1, double a2, double b0, double b1, double b2)
+  : impl_(new Impl(a1, a2, b0, b1, b2)) {}
+BiquadFilter::BiquadFilter(double a0, double a1, double a2, double b0, double b1, double b2)
+  : impl_(new Impl(a0, a1, a2, b0, b1, b2)) {}
+BiquadFilter::BiquadFilter(BiquadFilter&& that)
+  : impl_(std::move(that.impl_)) {}
+BiquadFilter::~BiquadFilter() = default;
+Signal BiquadFilter::operator()(Signal signal) {
+  return (*impl_)(signal);
 }
 
 BiquadFilter LowPassFilter(double sampling_rate, double frequency, double q) {
