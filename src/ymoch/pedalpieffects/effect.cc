@@ -121,6 +121,8 @@ class Effector::Impl {
 
 Effector::Effector(double sampling_rate_hz)
     : impl_(new Impl(sampling_rate_hz)) {}
+Effector::Effector(Effector&& other)
+    : impl_(std::move(other.impl_)) {}
 Effector::~Effector() = default;
 Amplifier& Effector::gain() { return impl_->gain(); }
 const Amplifier& Effector::gain() const { return impl_->gain(); }

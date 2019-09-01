@@ -24,6 +24,7 @@ class InputEqualizer {
 class Effector {
  public:
   explicit Effector(double sampling_rate_hz);
+  Effector(Effector&& other);
   ~Effector();
 
   dsp::effect::amplification::Amplifier& gain();

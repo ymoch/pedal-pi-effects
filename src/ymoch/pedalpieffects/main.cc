@@ -89,9 +89,9 @@ int main(int argc, char** argv) {
   bcm2835_gpio_set_pud(kPinFootSwitch1, BCM2835_GPIO_PUD_UP);
 
   const Normalizer<uint32_t> normalizer(0, power(2, 12) - 1);
-  auto input_equalizer = MakeToggle(InputEqualizer(kClockFrequencyHz));
-  auto effect = Effector(kClockFrequencyHz);
-  auto& gain = effect.gain();
+  auto input_equalizer = InputEqualizer(kClockFrequencyHz);
+  auto effect_toggle = MakeToggle(Effector(kClockFrequencyHz));
+  auto& gain = effect_toggle.effect().gain();
 
   // Main Loop
   for (uint32_t read_timer = 0;; ++read_timer) {
@@ -119,7 +119,7 @@ int main(int argc, char** argv) {
       }
 
       uint8_t toggle_switch_1 = bcm2835_gpio_lev(kPinToggleSwitch1);
-      input_equalizer.enabled(!toggle_switch_1);
+      effect_toggle.enabled(!toggle_switch_1);
 
       // light the effect when foot switch 1 is activated.
       uint8_t foot_switch_1 = bcm2835_gpio_lev(kPinFootSwitch1);
@@ -127,7 +127,7 @@ int main(int argc, char** argv) {
     }
 
     const auto signal =
-        Chain(normalizer.Normalize(input_signal), input_equalizer, effect);
+        Chain(normalizer.Normalize(input_signal), input_equalizer, effect_toggle);
 
     // generate output PWM signal 6 bits
     const uint32_t output_signal = normalizer.Unnormalize(signal);
