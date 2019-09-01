@@ -18,10 +18,13 @@ using dsp::type::Signal;
 namespace {
 
 constexpr double kMinFrequencyHz = 5.0;
+constexpr double kLowXoverFrequencyHz = 320.0;
+constexpr double kHighXoverFrequencyHz = 640.0;
 
 class LowFrequencyDriver {
  public:
-  explicit LowFrequencyDriver(double sampling_rate_hz);
+  explicit LowFrequencyDriver(double sampling_rate_hz)
+    : xover_(LowPassFilter(sampling_rate_hz, kLowXoverFrequencyHz)) {}
 
   dsp::type::Signal operator()(dsp::type::Signal in) {
     return dsp::flow::chain::Chain(in, xover_);
@@ -33,7 +36,8 @@ class LowFrequencyDriver {
 
 class HighFrequencyDriver {
  public:
-  explicit HighFrequencyDriver(double sampling_rate_hz);
+  explicit HighFrequencyDriver(double sampling_rate_hz)
+    : xover_(HighPassFilter(sampling_rate_hz, kHighXoverFrequencyHz)) {}
 
   dsp::type::Signal operator()(dsp::type::Signal in) {
     return dsp::flow::chain::Chain(in, xover_);
@@ -86,12 +90,6 @@ InputEqualizer::~InputEqualizer() = default;
 Signal InputEqualizer::operator()(Signal in) {
   return (*impl_)(in);
 }
-
-LowFrequencyDriver::LowFrequencyDriver(double sampling_rate_hz)
-    : xover_(LowPassFilter(sampling_rate_hz, 320)) {}
-
-HighFrequencyDriver::HighFrequencyDriver(double sampling_rate_hz)
-    : xover_(HighPassFilter(sampling_rate_hz, 640)) {}
 
 class Effector::Impl {
  public:
