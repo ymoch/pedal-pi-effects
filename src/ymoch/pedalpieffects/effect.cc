@@ -96,7 +96,7 @@ HighFrequencyDriver::HighFrequencyDriver(double sampling_rate_hz)
 class Effector::Impl {
  public:
   explicit Impl(double sampling_rate_hz)
-      : gain_(),
+      : gain_(1.5),
         xover_driver_(LowFrequencyDriver(sampling_rate_hz),
                       HighFrequencyDriver(sampling_rate_hz)),
         master_volume_(1.0 / 1.5) {}
