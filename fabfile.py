@@ -62,7 +62,6 @@ def install(c, clean_build=False):
     with c.cd(dir_name):
         c.run('cmake .')
         c.run('make pedal-pi-effects')
-        c.run('make test')
 
     c.sudo(f'bash -c \'cd "{dir_name}" && make install\'')
 

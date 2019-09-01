@@ -1,6 +1,8 @@
 #ifndef YMOCH_PEDALPIEFFECTS_INPUT_EQUALIZATION_H_
 #define YMOCH_PEDALPIEFFECTS_INPUT_EQUALIZATION_H_
 
+#include <memory>
+
 #include "dsp/type.h"
 
 namespace ymoch::pedalpieffects::input_equalization {
