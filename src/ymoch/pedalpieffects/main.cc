@@ -8,6 +8,7 @@
 #include "dsp/normalization.h"
 #include "dsp/type.h"
 #include "effect.h"
+#include "input-equalization.h"
 #include "math/constexpr-math.h"
 
 using std::cout;
@@ -18,8 +19,8 @@ using ymoch::pedalpieffects::dsp::normalization::Normalizer;
 using ymoch::pedalpieffects::dsp::flow::chain::Chain;
 using ymoch::pedalpieffects::dsp::flow::toggle::MakeToggle;
 using ymoch::pedalpieffects::math::constexpr_math::power;
-using ymoch::pedalpieffects::effect::InputEqualizer;
 using ymoch::pedalpieffects::effect::Effector;
+using ymoch::pedalpieffects::input_equalization::InputEqualizer;
 
 namespace {
 

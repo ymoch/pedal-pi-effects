@@ -8,6 +8,7 @@ add_executable(
   pedal-pi-effects
   ymoch/pedalpieffects/dsp/effect/biquad-filter.cc
   ymoch/pedalpieffects/effect.cc
+  ymoch/pedalpieffects/input-equalization.cc
   ymoch/pedalpieffects/main.cc
 )
 
