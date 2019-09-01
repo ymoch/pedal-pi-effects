@@ -18,13 +18,13 @@ using dsp::type::Signal;
 namespace {
 
 constexpr double kMinFrequencyHz = 5.0;
-constexpr double kLowXoverFrequencyHz = 320.0;
-constexpr double kHighXoverFrequencyHz = 640.0;
+constexpr double kLowXoverHz = 320.0;
+constexpr double kHighXoverHz = 640.0;
 
 class LowFrequencyDriver {
  public:
-  explicit LowFrequencyDriver(double sampling_rate_hz)
-    : xover_(LowPassFilter(sampling_rate_hz, kLowXoverFrequencyHz)) {}
+  LowFrequencyDriver(double sampling_rate_hz, double xover_hz)
+    : xover_(LowPassFilter(sampling_rate_hz, xover_hz)) {}
 
   dsp::type::Signal operator()(dsp::type::Signal in) {
     return dsp::flow::chain::Chain(in, xover_);
@@ -37,7 +37,7 @@ class LowFrequencyDriver {
 class HighFrequencyDriver {
  public:
   explicit HighFrequencyDriver(double sampling_rate_hz)
-    : xover_(HighPassFilter(sampling_rate_hz, kHighXoverFrequencyHz)) {}
+    : xover_(HighPassFilter(sampling_rate_hz, kHighXoverHz)) {}
 
   dsp::type::Signal operator()(dsp::type::Signal in) {
     return dsp::flow::chain::Chain(in, xover_);
@@ -95,7 +95,7 @@ class Effector::Impl {
  public:
   explicit Impl(double sampling_rate_hz)
       : gain_(1.5),
-        xover_driver_(LowFrequencyDriver(sampling_rate_hz),
+        xover_driver_(LowFrequencyDriver(sampling_rate_hz, kLowXoverHz),
                       HighFrequencyDriver(sampling_rate_hz)),
         master_volume_(1.0 / 1.5) {}
 
