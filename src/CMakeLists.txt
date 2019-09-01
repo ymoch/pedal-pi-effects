@@ -6,6 +6,7 @@ include_directories(.)
 
 add_executable(
   pedal-pi-effects
+  ymoch/pedalpieffects/dsp/processor.cc
   ymoch/pedalpieffects/effect.cc
   ymoch/pedalpieffects/main.cc
 )
