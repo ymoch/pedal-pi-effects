@@ -42,9 +42,9 @@ class HighFrequencyDriver {
  public:
   HighFrequencyDriver(double sampling_rate_hz, double xover_hz)
       : xover_(HighPassFilter(sampling_rate_hz, xover_hz)),
-        gain_(1000.0),
+        gain_(30.0),
         clip_(),
-        volume_(1.0 / 1000.0) {}
+        volume_(0.5) {}
 
   Signal operator()(Signal in) {
     return Chain(in, xover_, gain_, clip_, volume_);
